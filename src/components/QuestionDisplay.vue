@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Question } from './SurveyParser'
+import { Question } from '../components/SurveyParser'
 
 defineProps<{
   question: Question
