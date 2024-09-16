@@ -4,6 +4,7 @@ import monkey, { cdn } from 'vite-plugin-monkey'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 import svgLoader from 'vite-svg-loader'
+const { version } = require('./package.json')
 
 export default defineConfig({
   plugins: [
@@ -14,6 +15,7 @@ export default defineConfig({
         icon: 'https://vitejs.dev/logo.svg',
         namespace: 'npm/vite-plugin-monkey',
         match: ['https://www.google.com/', 'https://www.wjx.cn/*'],
+        version: version,
       },
       build: {
         externalGlobals: {
@@ -31,5 +33,8 @@ export default defineConfig({
     postcss: {
       plugins: [tailwindcss, autoprefixer],
     },
+  },
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(version), // 使用 package.json 中的版本号
   },
 })

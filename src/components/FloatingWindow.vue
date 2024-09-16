@@ -12,7 +12,13 @@
       class="custom-resizable pointer-events-auto rounded-lg shadow-lg"
     >
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div class="drag-handle cursor-move select-none bg-gray-100 p-2 text-lg font-semibold">问卷解析结果</div>
+        <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gray-100 p-2 text-lg font-semibold">
+          <div class="flex items-center">
+            <span class="text-gray-800 text-base font-semibold">问卷星自动答题小助手</span>
+            <span class="ml-2 text-xs font-normal text-gray-500">v{{ version }}</span>
+          </div>
+          <span class="text-xs font-normal text-gray-500">F3 显示/隐藏</span>
+        </div>
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
           <div v-if="surveyStore.questions.length === 0">正在解析问卷...</div>
           <QuestionDisplay
@@ -41,6 +47,9 @@ import { useSurveyObserver } from '../composables/useSurveyObserver'
 const surveyStore = useSurveyStore()
 const questionRefs = ref<{ [key: number]: any }>({})
 const scrollContainer = ref<HTMLElement | null>(null)
+
+// 获取版本号
+const version = import.meta.env.VITE_APP_VERSION || '未知'
 
 const handleScroll = (event: WheelEvent) => {
   event.stopPropagation()
