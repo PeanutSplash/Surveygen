@@ -9,7 +9,6 @@ export const useSurveyStore = defineStore('survey', () => {
 
   const parseAndUpdateSurvey = () => {
     questions.value = parseSurvey()
-    // 概率已经在 SurveyParser 中设置，这里不需要额外处理
   }
 
   const toggleVisibility = () => {
@@ -34,6 +33,6 @@ export const useSurveyStore = defineStore('survey', () => {
     parseAndUpdateSurvey,
     toggleVisibility,
     toggleMode,
-    updateQuestionOptions
+    updateQuestionOptions,
   }
 })

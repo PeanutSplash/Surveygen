@@ -4,17 +4,15 @@ import { useSurveyStore } from '../stores/surveyStore'
 export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>, scrollToQuestion: (index: number) => void) {
   const isAnswerSelection = (mutation: MutationRecord): boolean => {
     return (
-      mutation.type === 'attributes' && 
-      ((mutation.target as Element).classList.contains('jqRadio') && 
-       (mutation.target as Element).classList.contains('jqChecked')) ||
-      ((mutation.target as Element).classList.contains('jqCheckbox') && 
-       (mutation.target as Element).classList.contains('jqChecked'))
+      (mutation.type === 'attributes' &&
+        (mutation.target as Element).classList.contains('jqRadio') &&
+        (mutation.target as Element).classList.contains('jqChecked')) ||
+      ((mutation.target as Element).classList.contains('jqCheckbox') && (mutation.target as Element).classList.contains('jqChecked'))
     )
   }
 
   const isTextAreaChange = (mutation: MutationRecord): boolean => {
-    return mutation.type === 'characterData' && 
-           (mutation.target.parentNode as Element).tagName.toLowerCase() === 'textarea'
+    return mutation.type === 'characterData' && (mutation.target.parentNode as Element).tagName.toLowerCase() === 'textarea'
   }
 
   let observer: MutationObserver | null = null
@@ -50,11 +48,11 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
       subtree: true,
       attributes: true,
       attributeFilter: ['class'],
-      characterData: true
+      characterData: true,
     })
 
     // 添加输入事件监听器
-    surveyContent.addEventListener('input', (event) => {
+    surveyContent.addEventListener('input', event => {
       if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
         surveyStore.parseAndUpdateSurvey()
       }
@@ -66,7 +64,7 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
       observer.disconnect()
     }
     if (surveyContent) {
-      surveyContent.removeEventListener('input', (event) => {
+      surveyContent.removeEventListener('input', event => {
         if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
           surveyStore.parseAndUpdateSurvey()
         }

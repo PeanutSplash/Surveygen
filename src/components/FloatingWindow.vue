@@ -14,22 +14,18 @@
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gray-100 p-2 text-lg font-semibold">
           <div class="flex items-center">
-            <span class="text-gray-800 text-base font-semibold">问卷星自动答题小助手</span>
+            <span class="text-base font-semibold text-gray-800">问卷星自动答题小助手</span>
             <span class="ml-2 text-xs font-normal text-gray-500">v{{ version }}</span>
           </div>
           <div class="flex items-center">
             <button
               @click="surveyStore.toggleMode"
-              class="mr-2 px-2 py-1 text-xs font-normal rounded"
+              class="mr-2 rounded px-2 py-1 text-xs font-normal"
               :class="surveyStore.isAutoMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
             >
               {{ surveyStore.isAutoMode ? '自动模式' : '手动模式' }}
             </button>
-            <button
-              v-if="surveyStore.isAutoMode"
-              @click="randomizeAllQuestions"
-              class="mr-2 px-2 py-1 text-xs font-normal rounded bg-green-500 text-white"
-            >
+            <button v-if="surveyStore.isAutoMode" @click="randomizeAllQuestions" class="mr-2 rounded bg-green-500 px-2 py-1 text-xs font-normal text-white">
               随机所有题目
             </button>
             <span class="text-xs font-normal text-gray-500">F3 显示/隐藏</span>
@@ -98,8 +94,24 @@ const redirectToVjUrl = () => {
   }
 }
 
-const randomizeAllQuestions = () => {
-  surveyStore.questions.forEach(question => {
+type Option = {
+  probability: number
+  [key: string]: any
+}
+
+type Row = {
+  options: Option[]
+  [key: string]: any
+}
+
+type Question = {
+  options?: Option[]
+  rows?: Row[]
+  [key: string]: any
+}
+
+const randomizeAllQuestions = (): void => {
+  surveyStore.questions.forEach((question: Question) => {
     if (question.options) {
       randomizeOptions(question.options)
     } else if (question.rows) {
@@ -108,7 +120,7 @@ const randomizeAllQuestions = () => {
   })
 }
 
-const randomizeOptions = (options: any[]) => {
+const randomizeOptions = (options: Option[]): void => {
   const total = options.length
   let remaining = 100
   options.forEach((option, index) => {
