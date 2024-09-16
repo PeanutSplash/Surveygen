@@ -1,7 +1,7 @@
 <template>
   <div ref="questionRef" class="question bg-white rounded-lg shadow-custom p-6 mb-6 max-w-6xl mx-auto text-left">
     <h3 class="text-sm font-semibold mb-8 text-gray-800">{{ question.index }}. {{ question.title }}</h3>
-    <div v-if="question.type === 'radio'" 
+    <div v-if="question.type === 'radio' || question.type === 'checkbox'" 
          class="space-y-2 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-4 sm:space-y-0 mt-4">
       <div 
         v-for="option in question.options" 
@@ -47,18 +47,66 @@
         </tbody>
       </table>
     </div>
+    <div v-else-if="question.type === 'textarea'" class="mt-4">
+      <textarea
+        class="w-full p-2 border border-gray-300 rounded-md"
+        :value="textareaValue"
+        readonly
+      ></textarea>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { Question } from '../components/SurveyParser'
 
-defineProps<{
+const props = defineProps<{
   question: Question
 }>()
 
 const questionRef = ref<HTMLElement | null>(null)
+const textareaValue = ref(props.question.textareaValue || '')
+
+let observer: MutationObserver | null = null
+
+const updateTextareaValue = () => {
+  if (props.question.type === 'textarea' && props.question.textareaId) {
+    const textarea = document.getElementById(props.question.textareaId) as HTMLTextAreaElement
+    if (textarea) {
+      textareaValue.value = textarea.value
+    }
+  }
+}
+
+onMounted(() => {
+  if (props.question.type === 'textarea' && props.question.textareaId) {
+    const textarea = document.getElementById(props.question.textareaId)
+    if (textarea) {
+      observer = new MutationObserver(updateTextareaValue)
+      observer.observe(textarea, { attributes: true, childList: true, characterData: true, subtree: true })
+      
+      // 添加输入事件监听器
+      textarea.addEventListener('input', updateTextareaValue)
+    }
+  }
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+  }
+  if (props.question.type === 'textarea' && props.question.textareaId) {
+    const textarea = document.getElementById(props.question.textareaId)
+    if (textarea) {
+      textarea.removeEventListener('input', updateTextareaValue)
+    }
+  }
+})
+
+watch(() => props.question.textareaValue, (newValue) => {
+  textareaValue.value = newValue || ''
+})
 
 defineExpose({ questionRef })
 </script>

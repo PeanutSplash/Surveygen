@@ -5,6 +5,9 @@ export interface Question {
   options?: Array<{ value: string; text: string; isSelected: boolean }>;
   headers?: string[];
   rows?: Array<{ title: string; options: Array<{ value: string; isSelected: boolean }> }>;
+  isMultiSelect?: boolean;
+  textareaValue?: string;
+  textareaId?: string;  // 添加这一行
 }
 
 export function parseSurvey(): Question[] {
@@ -21,10 +24,15 @@ export function parseSurvey(): Question[] {
       case 'radio':
         parsedQuestion = { ...parsedQuestion, ...parseRadioQuestion(question) }
         break
+      case 'checkbox':
+        parsedQuestion = { ...parsedQuestion, ...parseCheckboxQuestion(question) }
+        break
       case 'matrix':
         parsedQuestion = { ...parsedQuestion, ...parseMatrixQuestion(question) }
         break
-      // 可以根据需要添加更多题型
+      case 'textarea':
+        parsedQuestion = { ...parsedQuestion, ...parseTextAreaQuestion(question) }
+        break
     }
 
     return {
@@ -37,12 +45,14 @@ export function parseSurvey(): Question[] {
 
 function getQuestionType(questionElement: Element): string {
   if (questionElement.querySelector('.ulradiocheck')) {
-    return 'radio'
+    const isMultiSelect = questionElement.querySelector('.jqCheckbox') !== null;
+    return isMultiSelect ? 'checkbox' : 'radio';
   } else if (questionElement.querySelector('table')) {
-    return 'matrix'
+    return 'matrix';
+  } else if (questionElement.querySelector('textarea')) {
+    return 'textarea';
   }
-  // 可以根据需要添加更多题型判断
-  return 'unknown'
+  return 'unknown';
 }
 
 function parseRadioQuestion(questionElement: Element) {
@@ -61,6 +71,33 @@ function parseRadioQuestion(questionElement: Element) {
   return {
     options: parsedOptions
   }
+}
+
+function parseCheckboxQuestion(questionElement: Element) {
+  const options = questionElement.querySelectorAll('.ulradiocheck li');
+  const parsedOptions = Array.from(options).map(option => {
+    const input = option.querySelector('input');
+    const label = option.querySelector('label');
+    const isChecked = option.querySelector('.jqCheckbox.jqChecked') !== null;
+    return {
+      value: input?.value || '',
+      text: label?.textContent || '',
+      isSelected: isChecked
+    };
+  });
+  
+  return {
+    options: parsedOptions,
+    isMultiSelect: true
+  };
+}
+
+function parseTextAreaQuestion(questionElement: Element) {
+  const textarea = questionElement.querySelector('textarea') as HTMLTextAreaElement;
+  return {
+    textareaValue: textarea?.value || '',
+    textareaId: textarea?.id || ''
+  };
 }
 
 function parseMatrixQuestion(questionElement: Element) {

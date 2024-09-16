@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { parseSurvey, Question } from '../components/SurveyParser'
 
 export const useSurveyStore = defineStore('survey', () => {
@@ -14,15 +14,10 @@ export const useSurveyStore = defineStore('survey', () => {
     isVisible.value = !isVisible.value
   }
 
-  const getQuestionByIndex = computed(() => {
-    return (index: number) => questions.value.find(q => q.index === index)
-  })
-
   return {
     questions,
     isVisible,
     parseAndUpdateSurvey,
-    toggleVisibility,
-    getQuestionByIndex
+    toggleVisibility
   }
 })

@@ -5,9 +5,16 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
   const isAnswerSelection = (mutation: MutationRecord): boolean => {
     return (
       mutation.type === 'attributes' && 
-      (mutation.target as Element).classList.contains('jqRadio') && 
-      (mutation.target as Element).classList.contains('jqChecked')
+      ((mutation.target as Element).classList.contains('jqRadio') && 
+       (mutation.target as Element).classList.contains('jqChecked')) ||
+      ((mutation.target as Element).classList.contains('jqCheckbox') && 
+       (mutation.target as Element).classList.contains('jqChecked'))
     )
+  }
+
+  const isTextAreaChange = (mutation: MutationRecord): boolean => {
+    return mutation.type === 'characterData' && 
+           (mutation.target.parentNode as Element).tagName.toLowerCase() === 'textarea'
   }
 
   let observer: MutationObserver | null = null
@@ -16,12 +23,13 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
   if (surveyContent) {
     observer = new MutationObserver(mutations => {
       const hasAnswerSelection = mutations.some(isAnswerSelection)
+      const hasTextAreaChange = mutations.some(isTextAreaChange)
 
-      if (hasAnswerSelection) {
+      if (hasAnswerSelection || hasTextAreaChange) {
         surveyStore.parseAndUpdateSurvey()
 
         const changedQuestionIndex = mutations.reduce((index, mutation) => {
-          if (isAnswerSelection(mutation)) {
+          if (isAnswerSelection(mutation) || isTextAreaChange(mutation)) {
             const questionElement = (mutation.target as Element).closest('.div_question')
             if (questionElement) {
               const questionIndex = Array.from(surveyContent.querySelectorAll('.div_question')).indexOf(questionElement as Element) + 1
@@ -42,13 +50,27 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
       subtree: true,
       attributes: true,
       attributeFilter: ['class'],
-      characterData: false,
+      characterData: true
+    })
+
+    // 添加输入事件监听器
+    surveyContent.addEventListener('input', (event) => {
+      if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
+        surveyStore.parseAndUpdateSurvey()
+      }
     })
   }
 
   onUnmounted(() => {
     if (observer) {
       observer.disconnect()
+    }
+    if (surveyContent) {
+      surveyContent.removeEventListener('input', (event) => {
+        if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
+          surveyStore.parseAndUpdateSurvey()
+        }
+      })
     }
   })
 }

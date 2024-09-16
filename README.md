@@ -16,3 +16,18 @@ TypeScript 默认无法处理 `.vue` 导入的类型信息，所以我们用 `vu
    1. 从 VSCode 的命令面板运行 `Extensions: Show Built-in Extensions`
    2. 找到 `TypeScript and JavaScript Language Features`，右键选择 `Disable (Workspace)`
 2. 通过从命令面板运行 `Developer: Reload Window` 重新加载 VSCode 窗口。
+
+# 问卷星自动答题小助手
+
+## 支持的问题类型
+
+当前版本支持以下问题类型:
+
+1. 单选题 (Radio)
+2. 多选题 (Checkbox)
+3. 矩阵题 (Matrix)
+4. 文本题 (Textarea)
+
+## 使用说明
+
+...（这里可以添加使用说明和其他相关信息）
