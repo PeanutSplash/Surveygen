@@ -17,7 +17,23 @@
             <span class="text-gray-800 text-base font-semibold">问卷星自动答题小助手</span>
             <span class="ml-2 text-xs font-normal text-gray-500">v{{ version }}</span>
           </div>
-          <span class="text-xs font-normal text-gray-500">F3 显示/隐藏</span>
+          <div class="flex items-center">
+            <button
+              @click="surveyStore.toggleMode"
+              class="mr-2 px-2 py-1 text-xs font-normal rounded"
+              :class="surveyStore.isAutoMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
+            >
+              {{ surveyStore.isAutoMode ? '自动模式' : '手动模式' }}
+            </button>
+            <button
+              v-if="surveyStore.isAutoMode"
+              @click="randomizeAllQuestions"
+              class="mr-2 px-2 py-1 text-xs font-normal rounded bg-green-500 text-white"
+            >
+              随机所有题目
+            </button>
+            <span class="text-xs font-normal text-gray-500">F3 显示/隐藏</span>
+          </div>
         </div>
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
           <div v-if="surveyStore.questions.length === 0">正在解析问卷...</div>
@@ -80,6 +96,30 @@ const redirectToVjUrl = () => {
     const newUrl = currentUrl.replace('/vm/', '/vj/')
     window.location.href = newUrl
   }
+}
+
+const randomizeAllQuestions = () => {
+  surveyStore.questions.forEach(question => {
+    if (question.options) {
+      randomizeOptions(question.options)
+    } else if (question.rows) {
+      question.rows.forEach(row => randomizeOptions(row.options))
+    }
+  })
+}
+
+const randomizeOptions = (options: any[]) => {
+  const total = options.length
+  let remaining = 100
+  options.forEach((option, index) => {
+    if (index === total - 1) {
+      option.probability = remaining
+    } else {
+      const randomProb = Math.floor(Math.random() * (remaining - (total - index - 1))) + 1
+      option.probability = randomProb
+      remaining -= randomProb
+    }
+  })
 }
 
 onMounted(() => {

@@ -1,14 +1,21 @@
+export interface Option {
+  value: string;
+  text: string;
+  isSelected: boolean;
+  probability: number; // 新增概率字段
+}
+
 export interface Question {
   index: number;
   title: string;
   type: string;
-  options?: Array<{ value: string; text: string; isSelected: boolean }>;
+  options?: Option[];
   headers?: string[];
-  rows?: Array<{ title: string; options: Array<{ value: string; isSelected: boolean }> }>;
+  rows?: Array<{ title: string; options: Array<Option> }>;
   isMultiSelect?: boolean;
   textareaValue?: string;
   textareaId?: string;
-  unknownContent?: string; // 添加这一行来存储未知题型的原始内容
+  unknownContent?: string;
 }
 
 export function parseSurvey(): Question[] {
@@ -70,9 +77,13 @@ function parseRadioQuestion(questionElement: Element) {
     return {
       value: input?.value || '',
       text: label?.textContent || '',
-      isSelected: isChecked
+      isSelected: isChecked,
+      probability: 0 // 初始化为0，稍后会更新
     }
   })
+  
+  // 更新概率
+  updateOptionProbabilities(parsedOptions)
   
   return {
     options: parsedOptions
@@ -88,9 +99,13 @@ function parseCheckboxQuestion(questionElement: Element) {
     return {
       value: input?.value || '',
       text: label?.textContent || '',
-      isSelected: isChecked
+      isSelected: isChecked,
+      probability: 0 // 初始化为0，稍后会更新
     };
   });
+  
+  // 更新概率
+  updateOptionProbabilities(parsedOptions)
   
   return {
     options: parsedOptions,
@@ -120,9 +135,19 @@ function parseMatrixQuestion(questionElement: Element) {
       const isChecked = td.querySelector('.jqRadio.jqChecked') !== null
       return {
         value: input?.value || '',
-        isSelected: isChecked
+        text: input?.value || '', // 添加 text 属性
+        isSelected: isChecked,
+        probability: isChecked ? 80 : 0 // 设置选中选项的概率为80%
       }
     })
+
+    // 计算未选中选项的概率
+    const unselectedOptions = rowOptions.filter(option => !option.isSelected)
+    const remainingProbability = unselectedOptions.length > 0 ? 20 / unselectedOptions.length : 0
+    unselectedOptions.forEach(option => {
+      option.probability = remainingProbability
+    })
+
     return {
       title: rowTitle,
       options: rowOptions
@@ -132,5 +157,54 @@ function parseMatrixQuestion(questionElement: Element) {
   return {
     headers: headers,
     rows: parsedRows
+  }
+}
+
+function updateOptionProbabilities(options: Option[]) {
+  const selectedOptions = options.filter(option => option.isSelected)
+  const unselectedOptions = options.filter(option => !option.isSelected)
+  
+  if (selectedOptions.length > 0) {
+    // 为选中的选项分配80%的概率
+    const probabilityPerSelected = Math.floor(80 / selectedOptions.length)
+    let remainingSelectedProbability = 80 - (probabilityPerSelected * selectedOptions.length)
+    
+    selectedOptions.forEach((option, index) => {
+      option.probability = probabilityPerSelected
+      if (index < remainingSelectedProbability) {
+        option.probability += 1
+      }
+    })
+    
+    // 为未选中的选项分配剩余的20%概率
+    if (unselectedOptions.length > 0) {
+      const probabilityPerUnselected = Math.floor(20 / unselectedOptions.length)
+      let remainingUnselectedProbability = 20 - (probabilityPerUnselected * unselectedOptions.length)
+      
+      unselectedOptions.forEach((option, index) => {
+        option.probability = probabilityPerUnselected
+        if (index < remainingUnselectedProbability) {
+          option.probability += 1
+        }
+      })
+    }
+  } else {
+    // 如果没有选中的选项，平均分配100%的概率
+    const probabilityPerOption = Math.floor(100 / options.length)
+    let remainingProbability = 100 - (probabilityPerOption * options.length)
+    
+    options.forEach((option, index) => {
+      option.probability = probabilityPerOption
+      if (index < remainingProbability) {
+        option.probability += 1
+      }
+    })
+  }
+
+  // 最后检查并确保总和为100
+  const totalProbability = options.reduce((sum, option) => sum + option.probability, 0)
+  if (totalProbability !== 100) {
+    const diff = 100 - totalProbability
+    options[options.length - 1].probability += diff
   }
 }
