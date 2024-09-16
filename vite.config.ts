@@ -14,7 +14,10 @@ export default defineConfig({
       userscript: {
         icon: 'https://vitejs.dev/logo.svg',
         namespace: 'npm/vite-plugin-monkey',
-        match: ['https://www.google.com/', 'https://www.wjx.cn/*'],
+        match: [
+          'https://www.wjx.cn/vj/*',
+          'https://www.wjx.cn/vm/*'
+        ],
         version: version,
       },
       build: {
