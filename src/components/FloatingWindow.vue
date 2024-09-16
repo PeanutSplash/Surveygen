@@ -74,6 +74,14 @@ const handleKeyDown = (event: KeyboardEvent) => {
   }
 }
 
+const redirectToVjUrl = () => {
+  const currentUrl = window.location.href
+  if (currentUrl.includes('/vm/')) {
+    const newUrl = currentUrl.replace('/vm/', '/vj/')
+    window.location.href = newUrl
+  }
+}
+
 onMounted(() => {
   const dragHandle = document.querySelector('.drag-handle') as HTMLElement
   if (dragHandle) {
@@ -81,6 +89,9 @@ onMounted(() => {
   }
 
   window.addEventListener('keydown', handleKeyDown)
+
+  // 检查并自动重定向到VJ版本
+  redirectToVjUrl()
 
   // 初始解析
   surveyStore.parseAndUpdateSurvey()
