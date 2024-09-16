@@ -54,6 +54,19 @@
         readonly
       ></textarea>
     </div>
+    <div v-else class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+      <p class="text-yellow-700 font-medium mb-2">未知题型</p>
+      <p class="text-yellow-600 text-sm">
+        这是一个未识别的问题类型。我们正在努力支持更多的问题类型。
+      </p>
+      <details class="mt-2">
+        <summary class="text-yellow-600 text-sm cursor-pointer hover:underline">
+          查看原始内容
+        </summary>
+        <div class="mt-2 p-2 bg-white rounded border border-yellow-200 text-xs text-gray-600 overflow-auto max-h-40" v-html="question.unknownContent">
+        </div>
+      </details>
+    </div>
   </div>
 </template>
 

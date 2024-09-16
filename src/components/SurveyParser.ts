@@ -7,7 +7,8 @@ export interface Question {
   rows?: Array<{ title: string; options: Array<{ value: string; isSelected: boolean }> }>;
   isMultiSelect?: boolean;
   textareaValue?: string;
-  textareaId?: string;  // 添加这一行
+  textareaId?: string;
+  unknownContent?: string; // 添加这一行来存储未知题型的原始内容
 }
 
 export function parseSurvey(): Question[] {
@@ -33,6 +34,11 @@ export function parseSurvey(): Question[] {
       case 'textarea':
         parsedQuestion = { ...parsedQuestion, ...parseTextAreaQuestion(question) }
         break
+      default:
+        parsedQuestion = { 
+          ...parsedQuestion, 
+          unknownContent: question.innerHTML 
+        }
     }
 
     return {
