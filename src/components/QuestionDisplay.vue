@@ -120,6 +120,7 @@ const updateProbability = (index: number) => {
     })
 
     surveyStore.updateQuestionOptions(props.question.index, props.question.options)
+    surveyStore.saveData() // 添加这行来保存更新后的数据
   }
 }
 
@@ -130,6 +131,7 @@ const updateTextareaValue = () => {
     const textarea = document.getElementById(props.question.textareaId) as HTMLTextAreaElement
     if (textarea) {
       textareaValue.value = textarea.value
+      surveyStore.saveData() // 添加这行来保存更新后的数据
     }
   }
 }

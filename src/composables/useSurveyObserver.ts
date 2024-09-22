@@ -24,22 +24,41 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
       const hasTextAreaChange = mutations.some(isTextAreaChange)
 
       if (hasAnswerSelection || hasTextAreaChange) {
-        surveyStore.parseAndUpdateSurvey()
-
-        const changedQuestionIndex = mutations.reduce((index, mutation) => {
+        mutations.forEach(mutation => {
           if (isAnswerSelection(mutation) || isTextAreaChange(mutation)) {
             const questionElement = (mutation.target as Element).closest('.div_question')
             if (questionElement) {
-              const questionIndex = Array.from(surveyContent.querySelectorAll('.div_question')).indexOf(questionElement as Element) + 1
-              return questionIndex > index ? questionIndex : index
+              const questionIndex = Array.from(surveyContent.querySelectorAll('.div_question')).indexOf(questionElement as Element)
+              const question = surveyStore.questions[questionIndex]
+              if (question) {
+                if (question.type === 'radio' || question.type === 'checkbox') {
+                  const options = questionElement.querySelectorAll('.ulradiocheck li')
+                  question.options = Array.from(options).map((option, index) => ({
+                    ...question.options[index],
+                    isSelected: option.querySelector('.jqChecked') !== null
+                  }))
+                } else if (question.type === 'matrix') {
+                  const rows = questionElement.querySelectorAll('tbody tr')
+                  question.rows = Array.from(rows).map((row, rowIndex) => ({
+                    ...question.rows[rowIndex],
+                    options: Array.from(row.querySelectorAll('td')).map((td, optionIndex) => ({
+                      ...question.rows[rowIndex].options[optionIndex],
+                      isSelected: td.querySelector('.jqChecked') !== null
+                    }))
+                  }))
+                } else if (question.type === 'textarea') {
+                  const textarea = questionElement.querySelector('textarea') as HTMLTextAreaElement
+                  if (textarea) {
+                    question.textareaValue = textarea.value
+                  }
+                }
+                surveyStore.updateQuestion(questionIndex, question)
+                scrollToQuestion(questionIndex + 1)
+              }
             }
           }
-          return index
-        }, 0)
-
-        if (changedQuestionIndex > 0) {
-          scrollToQuestion(changedQuestionIndex)
-        }
+        })
+        surveyStore.saveData()
       }
     })
 
@@ -54,7 +73,16 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
     // 添加输入事件监听器
     surveyContent.addEventListener('input', event => {
       if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
-        surveyStore.parseAndUpdateSurvey()
+        const questionElement = (event.target as Element).closest('.div_question')
+        if (questionElement) {
+          const questionIndex = Array.from(surveyContent.querySelectorAll('.div_question')).indexOf(questionElement as Element)
+          const question = surveyStore.questions[questionIndex]
+          if (question && question.type === 'textarea') {
+            question.textareaValue = (event.target as HTMLTextAreaElement).value
+            surveyStore.updateQuestion(questionIndex, question)
+            surveyStore.saveData()
+          }
+        }
       }
     })
   }
@@ -64,11 +92,7 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
       observer.disconnect()
     }
     if (surveyContent) {
-      surveyContent.removeEventListener('input', event => {
-        if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
-          surveyStore.parseAndUpdateSurvey()
-        }
-      })
+      surveyContent.removeEventListener('input', () => {})
     }
   })
 }

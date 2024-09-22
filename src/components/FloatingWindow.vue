@@ -145,8 +145,8 @@ onMounted(() => {
   // 检查并自动重定向到VJ版本
   redirectToVjUrl()
 
-  // 初始解析
-  surveyStore.parseAndUpdateSurvey()
+  // 加载保存的数据
+  surveyStore.loadData()
 
   // 使用 useSurveyObserver composable
   useSurveyObserver(surveyStore, scrollToQuestion)
