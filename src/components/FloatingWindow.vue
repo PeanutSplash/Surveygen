@@ -134,6 +134,48 @@ const randomizeOptions = (options: Option[]): void => {
   })
 }
 
+// 新增函数：填充问卷答案
+const fillSurveyAnswers = () => {
+  const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent')
+  if (!surveyContent) return
+
+  surveyStore.questions.forEach((question, index) => {
+    const questionElement = surveyContent.querySelector(`#divquestion${index + 1}`)
+    if (!questionElement) return
+
+    if (question.options) {
+      question.options.forEach(option => {
+        const inputElement = questionElement.querySelector(`input[value="${option.value}"]`) as HTMLInputElement
+        if (inputElement && option.isSelected) {
+          inputElement.checked = true
+          const labelElement = inputElement.nextElementSibling as HTMLElement
+          if (labelElement) {
+            labelElement.click() // 模拟点击以触发样式变化
+          }
+        }
+      })
+    } else if (question.rows) {
+      question.rows.forEach(row => {
+        row.options.forEach(option => {
+          const inputElement = questionElement.querySelector(`input[value="${option.value}"]`) as HTMLInputElement
+          if (inputElement && option.isSelected) {
+            inputElement.checked = true
+            const labelElement = inputElement.nextElementSibling as HTMLElement
+            if (labelElement) {
+              labelElement.click() // 模拟点击以触发样式变化
+            }
+          }
+        })
+      })
+    } else if (question.type === 'textarea' && question.textareaId) {
+      const textareaElement = document.getElementById(question.textareaId) as HTMLTextAreaElement
+      if (textareaElement) {
+        textareaElement.value = question.textareaValue || ''
+      }
+    }
+  })
+}
+
 onMounted(() => {
   const dragHandle = document.querySelector('.drag-handle') as HTMLElement
   if (dragHandle) {
@@ -150,6 +192,9 @@ onMounted(() => {
 
   // 使用 useSurveyObserver composable
   useSurveyObserver(surveyStore, scrollToQuestion)
+
+  // 填充问卷答案
+  fillSurveyAnswers()
 })
 
 onUnmounted(() => {
