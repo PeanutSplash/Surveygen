@@ -198,6 +198,13 @@ const fillSurveyAnswers = () => {
       }
     }
   })
+  // 添加定时器，等待一秒钟后点击提交按钮
+  setTimeout(() => {
+    const submitButton = document.getElementById('submit_button') as HTMLInputElement
+    if (submitButton) {
+      submitButton.click()
+    }
+  }, 1000)
 }
 
 onMounted(() => {
