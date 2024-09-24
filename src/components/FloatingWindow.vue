@@ -144,28 +144,52 @@ const fillSurveyAnswers = () => {
     if (!questionElement) return
 
     if (question.options) {
-      question.options.forEach(option => {
-        const inputElement = questionElement.querySelector(`input[value="${option.value}"]`) as HTMLInputElement
-        if (inputElement && option.isSelected) {
+      const totalProbability = question.options.reduce((sum, option) => sum + option.probability, 0)
+      let random = Math.random() * totalProbability
+      let selectedOption = null
+
+      for (const option of question.options) {
+        if (random < option.probability) {
+          selectedOption = option
+          break
+        }
+        random -= option.probability
+      }
+
+      if (selectedOption) {
+        const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
+        if (inputElement) {
           inputElement.checked = true
           const labelElement = inputElement.nextElementSibling as HTMLElement
           if (labelElement) {
             labelElement.click() // 模拟点击以触发样式变化
           }
         }
-      })
+      }
     } else if (question.rows) {
       question.rows.forEach(row => {
-        row.options.forEach(option => {
-          const inputElement = questionElement.querySelector(`input[value="${option.value}"]`) as HTMLInputElement
-          if (inputElement && option.isSelected) {
+        const totalProbability = row.options.reduce((sum, option) => sum + option.probability, 0)
+        let random = Math.random() * totalProbability
+        let selectedOption = null
+
+        for (const option of row.options) {
+          if (random < option.probability) {
+            selectedOption = option
+            break
+          }
+          random -= option.probability
+        }
+
+        if (selectedOption) {
+          const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
+          if (inputElement) {
             inputElement.checked = true
             const labelElement = inputElement.nextElementSibling as HTMLElement
             if (labelElement) {
               labelElement.click() // 模拟点击以触发样式变化
             }
           }
-        })
+        }
       })
     } else if (question.type === 'textarea' && question.textareaId) {
       const textareaElement = document.getElementById(question.textareaId) as HTMLTextAreaElement
