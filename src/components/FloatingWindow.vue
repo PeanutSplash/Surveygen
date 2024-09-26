@@ -202,10 +202,34 @@ const fillSurveyAnswers = () => {
   setTimeout(() => {
     const submitButton = document.getElementById('submit_button') as HTMLInputElement
     if (submitButton) {
+      localStorage.setItem('currentSurveyUrl', window.location.href)
       submitButton.click()
     }
   }, 1000)
 }
+
+const observer = new MutationObserver(() => {
+  const currentUrl = window.location.href
+  if (currentUrl.includes('https://www.wjx.cn/wjx/join/complete.aspx')) {
+    setTimeout(() => {
+      const savedUrl = localStorage.getItem('currentSurveyUrl')
+      if (savedUrl) {
+        window.location.href = savedUrl
+      }
+    }, 1000)
+  }
+})
+
+// 配置观察器
+const config = { subtree: true, childList: true }
+
+// 开始观察
+observer.observe(document, config)
+
+// 在组件卸载时停止观察
+onUnmounted(() => {
+  observer.disconnect()
+})
 
 onMounted(() => {
   const dragHandle = document.querySelector('.drag-handle') as HTMLElement
