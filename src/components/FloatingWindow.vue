@@ -134,78 +134,223 @@ const randomizeOptions = (options: Option[]): void => {
   })
 }
 
-// 新增函数：填充问卷答案
-const fillSurveyAnswers = () => {
-  const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent')
-  if (!surveyContent) return
+// 新增函数：模拟人类行为的点击
+const simulateHumanClick = (element: HTMLElement) => {
+  return new Promise<void>((resolve) => {
+    // 随机延迟 500-1500 毫秒
+    const delay = Math.random() * 1000 + 500;
+    setTimeout(() => {
+      // 创建并分发鼠标事件
+      const rect = element.getBoundingClientRect();
+      const x = rect.left + Math.random() * rect.width;
+      const y = rect.top + Math.random() * rect.height;
+
+      // 模拟鼠标移动
+      const moveEvent = new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: x,
+        clientY: y
+      });
+      element.dispatchEvent(moveEvent);
+
+      // 短暂延迟后模拟点击
+      setTimeout(() => {
+        const clickEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: x,
+          clientY: y
+        });
+        element.dispatchEvent(clickEvent);
+        resolve();
+      }, Math.random() * 200 + 50);
+    }, delay);
+  });
+};
+
+// 修改后的滑块验证函数
+const simulateSliderVerification = async () => {
+  // 等待滑块元素出现
+  await new Promise<void>(resolve => {
+    const checkSlider = () => {
+      const slider = document.querySelector('#nc_1_n1z') as HTMLElement;
+      if (slider) {
+        resolve();
+      } else {
+        setTimeout(checkSlider, 100);
+      }
+    };
+    checkSlider();
+  });
+
+  const slider = document.querySelector('#nc_1_n1z') as HTMLElement;
+  if (!slider) return;
+
+  // 模拟鼠标按下
+  const mouseDownEvent = document.createEvent('MouseEvents');
+  mouseDownEvent.initEvent('mousedown', true, false);
+  slider.dispatchEvent(mouseDownEvent);
+
+  // 短暂延迟，模拟人类反应时间
+  await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200));
+
+  // 模拟鼠标移动
+  const mouseMoveEvent = document.createEvent('MouseEvents');
+  mouseMoveEvent.initEvent('mousemove', true, false);
+  Object.defineProperty(mouseMoveEvent, 'clientX', {
+    get() {
+      // 添加一些随机性，使滑动看起来更自然
+      return 260 + Math.random() * 10 - 5;
+    }
+  });
+  slider.dispatchEvent(mouseMoveEvent);
+
+  // 短暂延迟，模拟滑动时间
+  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500));
+
+  // 模拟鼠标松开
+  const mouseUpEvent = document.createEvent('MouseEvents');
+  mouseUpEvent.initEvent('mouseup', true, false);
+  slider.dispatchEvent(mouseUpEvent);
+
+  // 检查滑块验证是否成功
+  const sliderContainer = document.querySelector('#nc_1_n1t') as HTMLElement;
+  if (sliderContainer && !sliderContainer.classList.contains('nc-bg-success')) {
+    // 如果验证失败，重新尝试
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒后重试
+    await simulateSliderVerification();
+  }
+};
+
+// 修改 handleVerification 函数
+const handleVerification = async () => {
+  const verifyButton = document.querySelector('#SM_BTN_1') as HTMLElement;
+  if (verifyButton) {
+    await simulateHumanClick(verifyButton);
+    
+    // 等待验证结果
+    return new Promise<void>((resolve) => {
+      const observer = new MutationObserver(async (mutations) => {
+        for (const mutation of mutations) {
+          if (mutation.type === 'childList') {
+            const addedNodes = mutation.addedNodes;
+            for (let i = 0; i < addedNodes.length; i++) {
+              const node = addedNodes[i] as HTMLElement;
+              if (node.id === 'SM_POP_1') {
+                // 滑块验证出现
+                observer.disconnect();
+                await simulateSliderVerification();
+                resolve();
+                return;
+              }
+            }
+          } else if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const target = mutation.target as HTMLElement;
+            if (target.classList.contains('sm-btn-success')) {
+              observer.disconnect();
+              resolve();
+              return;
+            }
+          }
+        }
+      });
+      
+      observer.observe(document.body, { 
+        attributes: true, 
+        childList: true, 
+        subtree: true 
+      });
+      
+      // 设置超时，以防验证无法完成
+      setTimeout(() => {
+        observer.disconnect();
+        resolve();
+      }, 15000); // 保持15秒的超时时间
+    });
+  }
+};
+
+// 修改 fillSurveyAnswers 函数
+const fillSurveyAnswers = async () => {
+  const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent');
+  if (!surveyContent) return;
 
   surveyStore.questions.forEach((question, index) => {
-    const questionElement = surveyContent.querySelector(`#divquestion${index + 1}`)
-    if (!questionElement) return
+    const questionElement = surveyContent.querySelector(`#divquestion${index + 1}`);
+    if (!questionElement) return;
 
     if (question.options) {
-      const totalProbability = question.options.reduce((sum, option) => sum + option.probability, 0)
-      let random = Math.random() * totalProbability
-      let selectedOption = null
+      const totalProbability = question.options.reduce((sum, option) => sum + option.probability, 0);
+      let random = Math.random() * totalProbability;
+      let selectedOption = null;
 
       for (const option of question.options) {
         if (random < option.probability) {
-          selectedOption = option
-          break
+          selectedOption = option;
+          break;
         }
-        random -= option.probability
+        random -= option.probability;
       }
 
       if (selectedOption) {
-        const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
+        const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement;
         if (inputElement) {
-          inputElement.checked = true
-          const labelElement = inputElement.nextElementSibling as HTMLElement
+          inputElement.checked = true;
+          const labelElement = inputElement.nextElementSibling as HTMLElement;
           if (labelElement) {
-            labelElement.click() // 模拟点击以触发样式变化
+            labelElement.click(); // 模拟点击以触发样式变化
           }
         }
       }
     } else if (question.rows) {
       question.rows.forEach(row => {
-        const totalProbability = row.options.reduce((sum, option) => sum + option.probability, 0)
-        let random = Math.random() * totalProbability
-        let selectedOption = null
+        const totalProbability = row.options.reduce((sum, option) => sum + option.probability, 0);
+        let random = Math.random() * totalProbability;
+        let selectedOption = null;
 
         for (const option of row.options) {
           if (random < option.probability) {
-            selectedOption = option
-            break
+            selectedOption = option;
+            break;
           }
-          random -= option.probability
+          random -= option.probability;
         }
 
         if (selectedOption) {
-          const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
+          const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement;
           if (inputElement) {
-            inputElement.checked = true
-            const labelElement = inputElement.nextElementSibling as HTMLElement
+            inputElement.checked = true;
+            const labelElement = inputElement.nextElementSibling as HTMLElement;
             if (labelElement) {
-              labelElement.click() // 模拟点击以触发样式变化
+              labelElement.click(); // 模拟点击以触发样式变化
             }
           }
         }
       })
     } else if (question.type === 'textarea' && question.textareaId) {
-      const textareaElement = document.getElementById(question.textareaId) as HTMLTextAreaElement
+      const textareaElement = document.getElementById(question.textareaId) as HTMLTextAreaElement;
       if (textareaElement) {
-        textareaElement.value = question.textareaValue || ''
+        textareaElement.value = question.textareaValue || '';
       }
     }
   })
   // 添加定时器，等待一秒钟后点击提交按钮
-  setTimeout(() => {
-    const submitButton = document.getElementById('submit_button') as HTMLInputElement
-    if (submitButton) {
-      localStorage.setItem('currentSurveyUrl', window.location.href)
-      submitButton.click()
-    }
-  }, 1000)
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  const submitButton = document.getElementById('submit_button') as HTMLInputElement;
+  if (submitButton) {
+    localStorage.setItem('currentSurveyUrl', window.location.href);
+    await simulateHumanClick(submitButton);
+
+    // 处理可能出现的验证
+    await handleVerification();
+
+    // 再次点击提交按钮（如果验证后需要）
+    await simulateHumanClick(submitButton);
+  }
 }
 
 const observer = new MutationObserver(() => {
