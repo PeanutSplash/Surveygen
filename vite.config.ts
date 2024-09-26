@@ -16,7 +16,8 @@ export default defineConfig({
         namespace: 'npm/vite-plugin-monkey',
         match: [
           'https://www.wjx.cn/vj/*',
-          'https://www.wjx.cn/vm/*'
+          'https://www.wjx.cn/vm/*',
+          'https://www.wjx.cn/wjx/join/*'
         ],
         version: version,
       },
