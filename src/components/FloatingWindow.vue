@@ -12,23 +12,30 @@
       class="!pointer-events-auto rounded-lg shadow-lg"
     >
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gray-100 px-4 py-2 text-lg font-semibold">
-          <div class="flex items-center">
-            <span class="text-base font-semibold text-gray-800">Surveygen</span>
-            <span class="ml-2 text-xs font-normal text-gray-500">v{{ version }}</span>
+        <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-2 text-white shadow-sm">
+          <div class="flex items-center space-x-2">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <span class="text-sm font-medium">Surveygen</span>
+            <span class="rounded-full bg-white bg-opacity-20 px-1.5 py-0.5 text-xs">v{{ version }}</span>
           </div>
-          <div class="flex items-center">
+          <div class="flex items-center space-x-2">
             <button
               @click="surveyStore.toggleMode"
-              class="mr-2 rounded px-2 py-1 text-xs font-normal"
-              :class="surveyStore.isAutoMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
+              class="rounded-full px-2 py-0.5 text-xs font-medium transition-colors duration-200"
+              :class="surveyStore.isAutoMode ? 'bg-white text-blue-600' : 'bg-blue-400 text-white hover:bg-blue-300'"
             >
-              {{ surveyStore.isAutoMode ? '自动模式' : '手动模式' }}
+              {{ surveyStore.isAutoMode ? '自动' : '手动' }}
             </button>
-            <button v-if="surveyStore.isAutoMode" @click="randomizeAllQuestions" class="mr-2 rounded bg-green-500 px-2 py-1 text-xs font-normal text-white">
-              随机所有题目
+            <button 
+              v-if="surveyStore.isAutoMode" 
+              @click="randomizeAllQuestions" 
+              class="rounded-full bg-green-500 px-2 py-0.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-green-400"
+            >
+              随机
             </button>
-            <span class="text-xs font-normal text-gray-500">F3 显示/隐藏</span>
+            <span class="text-xs opacity-75">F3 显示/隐藏</span>
           </div>
         </div>
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
@@ -427,8 +434,8 @@ onUnmounted(() => {
 }
 
 .bg-gradient-to-r {
-  background-size: 200% 200%;
-  animation: gradient 3s ease infinite;
+  background-size: 150% 150%;
+  animation: gradient 10s ease infinite;
 }
 
 @keyframes pulse {
