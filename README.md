@@ -17,7 +17,7 @@ TypeScript 默认无法处理 `.vue` 导入的类型信息，所以我们用 `vu
    2. 找到 `TypeScript and JavaScript Language Features`，右键选择 `Disable (Workspace)`
 2. 通过从命令面板运行 `Developer: Reload Window` 重新加载 VSCode 窗口。
 
-# 问卷星自动答题小助手
+# Surveygen(问卷星自动答题助手)
 
 ## 支持的问题类型
 

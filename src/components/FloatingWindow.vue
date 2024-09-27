@@ -14,7 +14,7 @@
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gray-100 p-2 text-lg font-semibold">
           <div class="flex items-center">
-            <span class="text-base font-semibold text-gray-800">问卷星自动答题小助手</span>
+            <span class="text-base font-semibold text-gray-800">Surveygen</span>
             <span class="ml-2 text-xs font-normal text-gray-500">v{{ version }}</span>
           </div>
           <div class="flex items-center">
