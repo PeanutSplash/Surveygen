@@ -1,5 +1,5 @@
 <template>
-  <div v-if="surveyStore.isVisible" class="!pointer-events-none !fixed !inset-0 !z-50">
+  <div v-if="surveyStore.isVisible" class="!fixed !inset-0 !z-[9999]">
     <vue-draggable-resizable
       :w="600"
       :h="400"
@@ -9,13 +9,13 @@
       :draggable="true"
       :resizable="true"
       :drag-handle="'.drag-handle'"
-      class="custom-resizable pointer-events-auto rounded-lg shadow-lg"
+      class="!pointer-events-auto rounded-lg shadow-lg"
     >
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gray-100 px-4 py-2 text-lg font-semibold">
           <div class="flex items-center">
             <span class="text-base font-semibold text-gray-800">Surveygen</span>
-            <span class="ml-2 text-xs font-normal text-gray-500">v {{ version }}</span>
+            <span class="ml-2 text-xs font-normal text-gray-500">v{{ version }}</span>
           </div>
           <div class="flex items-center">
             <button
@@ -32,8 +32,13 @@
           </div>
         </div>
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
-          <div v-if="surveyStore.questions.length === 0">正在解析问卷...</div>
+          <div v-if="surveyStore.questions.length === 0" class="flex flex-col items-center justify-center h-full">
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="mt-4 text-lg font-semibold text-gray-700">正在等待问卷加载...</p>
+            <p class="mt-2 text-sm text-gray-500">请稍候，我们正在为您准备问卷内容</p>
+          </div>
           <QuestionDisplay
+            v-else
             v-for="question in surveyStore.questions"
             :key="question.index"
             :question="question"
@@ -397,9 +402,6 @@ onUnmounted(() => {
 .vdr {
   border: none !important;
 }
-.custom-resizable {
-  z-index: 9999 !important;
-}
 
 .fade-enter-active,
 .fade-leave-active {
@@ -427,5 +429,18 @@ onUnmounted(() => {
 .bg-gradient-to-r {
   background-size: 200% 200%;
   animation: gradient 3s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>
