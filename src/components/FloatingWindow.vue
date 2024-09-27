@@ -15,7 +15,7 @@
         <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gray-100 px-4 py-2 text-lg font-semibold">
           <div class="flex items-center">
             <span class="text-base font-semibold text-gray-800">Surveygen</span>
-            <span class="ml-2 text-xs font-normal text-gray-500">v{{ version }}</span>
+            <span class="ml-2 text-xs font-normal text-gray-500">v {{ version }}</span>
           </div>
           <div class="flex items-center">
             <button
