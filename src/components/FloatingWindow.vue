@@ -42,6 +42,13 @@
             >
               随机
             </button>
+            <button
+              @click="toggleAutoAnswer"
+              class="rounded-full px-2 py-0.5 text-xs font-medium transition-colors duration-200"
+              :class="isAutoAnswerEnabled ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'"
+            >
+              {{ isAutoAnswerEnabled ? '自动答题开启' : '自动答题关闭' }}
+            </button>
             <span class="text-xs opacity-75">F3 显示/隐藏</span>
           </div>
         </div>
@@ -83,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import 'vue-draggable-resizable/style.css'
 import QuestionDisplay from './QuestionDisplay.vue'
 import { useSurveyStore } from '../stores/surveyStore'
@@ -355,6 +362,23 @@ function handleAlertBox() {
   }
 }
 
+const isAutoAnswerEnabled = ref(false)
+
+const toggleAutoAnswer = () => {
+  isAutoAnswerEnabled.value = !isAutoAnswerEnabled.value
+  localStorage.setItem('autoAnswerEnabled', JSON.stringify(isAutoAnswerEnabled.value))
+  if (isAutoAnswerEnabled.value) {
+    fillSurveyAnswers()
+  }
+}
+
+// 监听 isAutoAnswerEnabled 的变化
+watch(isAutoAnswerEnabled, (newValue) => {
+  if (newValue) {
+    fillSurveyAnswers()
+  }
+})
+
 onMounted(() => {
   // 清除 cookie
   clearCookie()
@@ -375,8 +399,16 @@ onMounted(() => {
   // 使用 useSurveyObserver composable
   useSurveyObserver(surveyStore, scrollToQuestion)
 
-  // 填充问卷答案
-  fillSurveyAnswers()
+  // 从本地存储中读取自动答题状态
+  const storedAutoAnswerEnabled = localStorage.getItem('autoAnswerEnabled')
+  if (storedAutoAnswerEnabled !== null) {
+    isAutoAnswerEnabled.value = JSON.parse(storedAutoAnswerEnabled)
+  }
+
+  // 如果自动答题已启用，则触发填充答案
+  if (isAutoAnswerEnabled.value) {
+    fillSurveyAnswers()
+  }
 
   const observer = new MutationObserver(mutations => {
     for (const mutation of mutations) {
