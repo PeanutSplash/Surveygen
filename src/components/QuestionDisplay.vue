@@ -11,9 +11,14 @@
       <div
         v-for="(option, index) in question.options"
         :key="option.value"
-        :class="['rounded-md p-3 transition-all duration-200 ease-in-out', option.isSelected ? 'border-blue-500 bg-blue-100' : 'bg-gray-50 hover:bg-gray-100']"
+        :class="[
+          'rounded-md p-3 transition-all duration-200 ease-in-out',
+          option.isSelected
+            ? 'border-2 border-indigo-500 bg-indigo-50 shadow-md'
+            : 'border border-gray-200 bg-white hover:bg-gray-50 hover:shadow-sm'
+        ]"
       >
-        <span :class="{ 'font-medium text-blue-700': option.isSelected, 'text-gray-700': !option.isSelected }">
+        <span :class="{ 'font-medium text-indigo-700': option.isSelected, 'text-gray-700': !option.isSelected }">
           {{ option.text }}
         </span>
         <div v-if="surveyStore.isAutoMode" class="mt-2">
@@ -197,9 +202,19 @@ defineExpose({ questionRef })
 <style scoped>
 .shadow-custom {
   box-shadow:
-    0 -1px 2px 0 rgba(0, 0, 0, 0.05),
-    0 1px 2px 0 rgba(0, 0, 0, 0.06),
-    0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.question {
+  transition: all 0.3s ease-in-out;
+}
+
+.question:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 @media (min-width: 640px) {
