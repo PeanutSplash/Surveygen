@@ -65,8 +65,9 @@
         </div>
       </div>
       <transition name="fade">
-        <div v-if="isVerifying" class="mt-1 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-0.5 shadow-lg">
-          <div class="flex items-center space-x-3 rounded-lg bg-gray-900 bg-opacity-90 px-4 py-3 text-white">
+        <div v-if="isVerifying" class="relative mt-1 overflow-hidden rounded-lg p-0.5 shadow-lg">
+          <div class="animate-border-flow absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-600 to-blue-500"></div>
+          <div class="relative z-10 flex items-center space-x-3 rounded-md bg-gray-900 bg-opacity-90 px-4 py-3 text-white">
             <div class="relative h-6 w-6">
               <div class="absolute inset-0 h-full w-full animate-spin rounded-full border-b-2 border-white"></div>
               <div class="absolute inset-0 flex items-center justify-center">
@@ -457,5 +458,22 @@ onUnmounted(() => {
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes border-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-border-flow {
+  background-size: 200% 200%;
+  animation: border-flow 3s linear infinite;
 }
 </style>
