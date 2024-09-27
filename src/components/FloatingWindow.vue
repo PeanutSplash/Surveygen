@@ -325,6 +325,16 @@ const clearCookie = () => {
   }
 }
 
+function handleAlertBox() {
+  const alertBox = document.getElementById('alert_box')
+  if (alertBox) {
+    const confirmButton = alertBox.querySelector('button') as HTMLButtonElement
+    if (confirmButton) {
+      confirmButton.click()
+    }
+  }
+}
+
 onMounted(() => {
   // 清除 cookie
   clearCookie()
@@ -347,6 +357,29 @@ onMounted(() => {
 
   // 填充问卷答案
   fillSurveyAnswers()
+
+  const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      if (mutation.type === 'childList') {
+        const addedNodes = mutation.addedNodes
+        for (let i = 0; i < addedNodes.length; i++) {
+          const node = addedNodes[i] as HTMLElement
+          if (node.id === 'alert_box') {
+            handleAlertBox()
+            break
+          }
+        }
+      }
+    }
+  })
+
+  const config = { childList: true, subtree: true }
+
+  observer.observe(document.body, config)
+
+  onUnmounted(() => {
+    observer.disconnect()
+  })
 })
 
 onUnmounted(() => {
