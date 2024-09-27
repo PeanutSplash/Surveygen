@@ -1,8 +1,14 @@
 <template>
-  <div ref="questionRef" class="question shadow-custom mx-auto mb-6 max-w-6xl rounded-lg bg-white p-6 text-left">
+  <div ref="questionRef" class="question mx-auto mb-6 max-w-6xl rounded-lg bg-[#fefefe] p-6 text-left transition-all duration-300 ease-in-out hover:shadow-lg">
     <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-sm font-semibold text-gray-800">{{ question.index }}. {{ question.title }}</h3>
-      <button v-if="surveyStore.isAutoMode" @click="randomizeQuestion" class="rounded bg-green-500 px-2 py-1 text-xs font-normal text-white">随机本题</button>
+      <h3 class="text-sm font-medium text-gray-700">{{ question.index }}. {{ question.title }}</h3>
+      <button
+        v-if="surveyStore.isAutoMode"
+        @click="randomizeQuestion"
+        class="rounded bg-indigo-500 px-3 py-1 text-xs font-medium text-white transition-colors duration-200 hover:bg-indigo-600"
+      >
+        随机本题
+      </button>
     </div>
     <div
       v-if="question.type === 'radio' || question.type === 'checkbox'"
@@ -12,10 +18,10 @@
         v-for="(option, index) in question.options"
         :key="option.value"
         :class="[
-          'rounded-md p-3 transition-all duration-200 ease-in-out',
+          'rounded-lg p-3 transition-all duration-200 ease-in-out',
           option.isSelected
-            ? 'border-2 border-indigo-500 bg-indigo-50 shadow-md'
-            : 'border border-gray-200 bg-white hover:bg-gray-50 hover:shadow-sm'
+            ? 'border-2 border-indigo-300 bg-indigo-50 shadow-sm'
+            : 'border border-gray-200 bg-[#fefefe] hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-sm',
         ]"
       >
         <span :class="{ 'font-medium text-indigo-700': option.isSelected, 'text-gray-700': !option.isSelected }">
@@ -29,7 +35,7 @@
             min="0"
             max="100"
             step="1"
-            class="w-16 rounded border p-1 text-xs"
+            class="w-16 rounded border p-1 text-xs focus:border-indigo-300 focus:outline-none focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             @input="updateProbability(index)"
           />
           <span class="ml-1 text-xs text-gray-500">%</span>
@@ -46,7 +52,7 @@
             </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 bg-white">
+        <tbody class="divide-y divide-gray-200 bg-[#fefefe]">
           <tr v-for="row in question.rows" :key="row.title">
             <td class="w-1/4 whitespace-nowrap px-4 py-2 font-medium text-gray-900">{{ row.title }}</td>
             <td
@@ -69,7 +75,7 @@
       <p class="text-sm text-yellow-600">这是一个未识别的问题类型。我们正在努力支持更多的问题类型。</p>
       <details class="mt-2">
         <summary class="cursor-pointer text-sm text-yellow-600 hover:underline">查看原始内容</summary>
-        <div class="mt-2 max-h-40 overflow-auto rounded border border-yellow-200 bg-white p-2 text-xs text-gray-600" v-html="question.unknownContent"></div>
+        <div class="mt-2 max-h-40 overflow-auto rounded border border-yellow-200 bg-[#fefefe] p-2 text-xs text-gray-600" v-html="question.unknownContent"></div>
       </details>
     </div>
   </div>
@@ -200,21 +206,14 @@ defineExpose({ questionRef })
 </script>
 
 <style scoped>
-.shadow-custom {
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
 .question {
-  transition: all 0.3s ease-in-out;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .question:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 @media (min-width: 640px) {

@@ -11,7 +11,7 @@
       :drag-handle="'.drag-handle'"
       class="!pointer-events-auto rounded-lg shadow-lg"
     >
-      <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-[#fafafa]">
         <div
           class="drag-handle flex cursor-move select-none items-center justify-between bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-2 text-white shadow-sm"
         >
