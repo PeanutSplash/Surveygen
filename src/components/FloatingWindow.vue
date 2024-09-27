@@ -45,6 +45,19 @@
           />
         </div>
       </div>
+      <transition name="fade">
+        <div v-if="isVerifying" class="mt-1 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-0.5 shadow-lg">
+          <div class="flex items-center space-x-3 rounded-lg bg-gray-900 bg-opacity-90 px-4 py-3 text-white">
+            <div class="relative h-6 w-6">
+              <div class="absolute inset-0 h-full w-full animate-spin rounded-full border-b-2 border-white"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="h-2 w-2 rounded-full bg-white"></div>
+              </div>
+            </div>
+            <span class="text-sm font-medium">{{ verificationStatus }}</span>
+          </div>
+        </div>
+      </transition>
     </vue-draggable-resizable>
   </div>
 </template>
@@ -135,10 +148,15 @@ const randomizeOptions = (options: Option[]): void => {
   })
 }
 
+const isVerifying = ref(false)
+const verificationStatus = ref('')
+
 // 修改 handleVerification 函数
 const handleVerification = async () => {
   const verifyButton = document.querySelector('#SM_BTN_1') as HTMLElement
   if (verifyButton) {
+    isVerifying.value = true
+    verificationStatus.value = '正在绕过人机验证...'
     await simulateHumanClick(verifyButton)
 
     // 等待验证结果
@@ -151,8 +169,10 @@ const handleVerification = async () => {
               const node = addedNodes[i] as HTMLElement
               if (node.id === 'SM_POP_1') {
                 // 滑块验证出现
+                verificationStatus.value = '正在绕过滑块验证...'
                 observer.disconnect()
                 await simulateSliderVerification()
+                isVerifying.value = false
                 resolve()
                 return
               }
@@ -160,7 +180,9 @@ const handleVerification = async () => {
           } else if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
             const target = mutation.target as HTMLElement
             if (target.classList.contains('sm-btn-success')) {
+              verificationStatus.value = '验证成功'
               observer.disconnect()
+              isVerifying.value = false
               resolve()
               return
             }
@@ -177,6 +199,8 @@ const handleVerification = async () => {
       // 设置超时，以防验证无法完成
       setTimeout(() => {
         observer.disconnect()
+        isVerifying.value = false
+        verificationStatus.value = '验证超时'
         resolve()
       }, 15000) // 保持15秒的超时时间
     })
@@ -342,5 +366,33 @@ onUnmounted(() => {
 }
 .custom-resizable {
   z-index: 9999 !important;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-gradient-to-r {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
 }
 </style>
