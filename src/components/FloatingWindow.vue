@@ -12,7 +12,7 @@
       class="custom-resizable pointer-events-auto rounded-lg shadow-lg"
     >
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gray-100 p-2 text-lg font-semibold">
+        <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gray-100 px-4 py-2 text-lg font-semibold">
           <div class="flex items-center">
             <span class="text-base font-semibold text-gray-800">Surveygen</span>
             <span class="ml-2 text-xs font-normal text-gray-500">v{{ version }}</span>
@@ -137,133 +137,133 @@ const randomizeOptions = (options: Option[]): void => {
 
 // 修改 handleVerification 函数
 const handleVerification = async () => {
-  const verifyButton = document.querySelector('#SM_BTN_1') as HTMLElement;
+  const verifyButton = document.querySelector('#SM_BTN_1') as HTMLElement
   if (verifyButton) {
-    await simulateHumanClick(verifyButton);
-    
+    await simulateHumanClick(verifyButton)
+
     // 等待验证结果
-    return new Promise<void>((resolve) => {
-      const observer = new MutationObserver(async (mutations) => {
+    return new Promise<void>(resolve => {
+      const observer = new MutationObserver(async mutations => {
         for (const mutation of mutations) {
           if (mutation.type === 'childList') {
-            const addedNodes = mutation.addedNodes;
+            const addedNodes = mutation.addedNodes
             for (let i = 0; i < addedNodes.length; i++) {
-              const node = addedNodes[i] as HTMLElement;
+              const node = addedNodes[i] as HTMLElement
               if (node.id === 'SM_POP_1') {
                 // 滑块验证出现
-                observer.disconnect();
-                await simulateSliderVerification();
-                resolve();
-                return;
+                observer.disconnect()
+                await simulateSliderVerification()
+                resolve()
+                return
               }
             }
           } else if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            const target = mutation.target as HTMLElement;
+            const target = mutation.target as HTMLElement
             if (target.classList.contains('sm-btn-success')) {
-              observer.disconnect();
-              resolve();
-              return;
+              observer.disconnect()
+              resolve()
+              return
             }
           }
         }
-      });
-      
-      observer.observe(document.body, { 
-        attributes: true, 
-        childList: true, 
-        subtree: true 
-      });
-      
+      })
+
+      observer.observe(document.body, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+      })
+
       // 设置超时，以防验证无法完成
       setTimeout(() => {
-        observer.disconnect();
-        resolve();
-      }, 15000); // 保持15秒的超时时间
-    });
+        observer.disconnect()
+        resolve()
+      }, 15000) // 保持15秒的超时时间
+    })
   }
-};
+}
 
 // 修改 fillSurveyAnswers 函数
 const fillSurveyAnswers = async () => {
-  const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent');
-  if (!surveyContent) return;
+  const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent')
+  if (!surveyContent) return
 
   surveyStore.questions.forEach((question, index) => {
-    const questionElement = surveyContent.querySelector(`#divquestion${index + 1}`);
-    if (!questionElement) return;
+    const questionElement = surveyContent.querySelector(`#divquestion${index + 1}`)
+    if (!questionElement) return
 
     if (question.options) {
-      const totalProbability = question.options.reduce((sum, option) => sum + option.probability, 0);
-      let random = Math.random() * totalProbability;
-      let selectedOption = null;
+      const totalProbability = question.options.reduce((sum, option) => sum + option.probability, 0)
+      let random = Math.random() * totalProbability
+      let selectedOption = null
 
       for (const option of question.options) {
         if (random < option.probability) {
-          selectedOption = option;
-          break;
+          selectedOption = option
+          break
         }
-        random -= option.probability;
+        random -= option.probability
       }
 
       if (selectedOption) {
-        const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement;
+        const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
         if (inputElement) {
-          inputElement.checked = true;
-          const labelElement = inputElement.nextElementSibling as HTMLElement;
+          inputElement.checked = true
+          const labelElement = inputElement.nextElementSibling as HTMLElement
           if (labelElement) {
-            labelElement.click(); // 模拟点击以触发样式变化
+            labelElement.click() // 模拟点击以触发样式变化
           }
         }
       }
     } else if (question.rows) {
       question.rows.forEach(row => {
-        const totalProbability = row.options.reduce((sum, option) => sum + option.probability, 0);
-        let random = Math.random() * totalProbability;
-        let selectedOption = null;
+        const totalProbability = row.options.reduce((sum, option) => sum + option.probability, 0)
+        let random = Math.random() * totalProbability
+        let selectedOption = null
 
         for (const option of row.options) {
           if (random < option.probability) {
-            selectedOption = option;
-            break;
+            selectedOption = option
+            break
           }
-          random -= option.probability;
+          random -= option.probability
         }
 
         if (selectedOption) {
-          const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement;
+          const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
           if (inputElement) {
-            inputElement.checked = true;
-            const labelElement = inputElement.nextElementSibling as HTMLElement;
+            inputElement.checked = true
+            const labelElement = inputElement.nextElementSibling as HTMLElement
             if (labelElement) {
-              labelElement.click(); // 模拟点击以触发样式变化
+              labelElement.click() // 模拟点击以触发样式变化
             }
           }
         }
       })
     } else if (question.type === 'textarea' && question.textareaId) {
-      const textareaElement = document.getElementById(question.textareaId) as HTMLTextAreaElement;
+      const textareaElement = document.getElementById(question.textareaId) as HTMLTextAreaElement
       if (textareaElement) {
-        textareaElement.value = question.textareaValue || '';
+        textareaElement.value = question.textareaValue || ''
       }
     }
   })
-  
+
   // 滚动到页面底部
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
 
   // 添加定时器，等待一秒钟后点击提交按钮
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000))
 
-  const submitButton = document.getElementById('submit_button') as HTMLInputElement;
+  const submitButton = document.getElementById('submit_button') as HTMLInputElement
   if (submitButton) {
-    localStorage.setItem('currentSurveyUrl', window.location.href);
-    await simulateHumanClick(submitButton);
+    localStorage.setItem('currentSurveyUrl', window.location.href)
+    await simulateHumanClick(submitButton)
 
     // 处理可能出现的验证
-    await handleVerification();
+    await handleVerification()
 
     // 再次点击提交按钮（如果验证后需要）
-    await simulateHumanClick(submitButton);
+    await simulateHumanClick(submitButton)
   }
 }
 
