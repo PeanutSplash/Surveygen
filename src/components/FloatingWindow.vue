@@ -1,5 +1,5 @@
 <template>
-  <div v-if="surveyStore.isVisible" class="!fixed !inset-0 !z-[9999]">
+  <div v-if="surveyStore.isVisible" class="!fixed !inset-0 !z-[9999] pointer-events-none">
     <vue-draggable-resizable
       :w="600"
       :h="400"
