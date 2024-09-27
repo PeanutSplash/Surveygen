@@ -12,10 +12,17 @@
       class="!pointer-events-auto rounded-lg shadow-lg"
     >
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div class="drag-handle flex cursor-move select-none items-center justify-between bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-2 text-white shadow-sm">
+        <div
+          class="drag-handle flex cursor-move select-none items-center justify-between bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-2 text-white shadow-sm"
+        >
           <div class="flex items-center space-x-2">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              ></path>
             </svg>
             <span class="text-sm font-medium">Surveygen</span>
             <span class="rounded-full bg-white bg-opacity-20 px-1.5 py-0.5 text-xs">v{{ version }}</span>
@@ -28,9 +35,9 @@
             >
               {{ surveyStore.isAutoMode ? '自动' : '手动' }}
             </button>
-            <button 
-              v-if="surveyStore.isAutoMode" 
-              @click="randomizeAllQuestions" 
+            <button
+              v-if="surveyStore.isAutoMode"
+              @click="randomizeAllQuestions"
               class="rounded-full bg-green-500 px-2 py-0.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-green-400"
             >
               随机
@@ -39,8 +46,8 @@
           </div>
         </div>
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
-          <div v-if="surveyStore.questions.length === 0" class="flex flex-col items-center justify-center h-full">
-            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div v-if="surveyStore.questions.length === 0" class="flex h-full flex-col items-center justify-center">
+            <div class="h-16 w-16 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
             <p class="mt-4 text-lg font-semibold text-gray-700">正在等待问卷加载...</p>
             <p class="mt-2 text-sm text-gray-500">请稍候，我们正在为您准备问卷内容</p>
           </div>
@@ -439,7 +446,8 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
