@@ -31,28 +31,37 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
               const questionIndex = Array.from(surveyContent.querySelectorAll('.div_question')).indexOf(questionElement as Element)
               const question = surveyStore.questions[questionIndex]
               if (question) {
+                // 只有当本地没有保存答案时才更新
                 if (question.type === 'radio' || question.type === 'checkbox') {
-                  const options = questionElement.querySelectorAll('.ulradiocheck li')
-                  question.options = Array.from(options).map((option, index) => ({
-                    ...question.options[index],
-                    isSelected: option.querySelector('.jqChecked') !== null
-                  }))
-                } else if (question.type === 'matrix') {
-                  const rows = questionElement.querySelectorAll('tbody tr')
-                  question.rows = Array.from(rows).map((row, rowIndex) => ({
-                    ...question.rows[rowIndex],
-                    options: Array.from(row.querySelectorAll('td')).map((td, optionIndex) => ({
-                      ...question.rows[rowIndex].options[optionIndex],
-                      isSelected: td.querySelector('.jqChecked') !== null
+                  if (!question.options?.some(option => option.isSelected)) {
+                    const options = questionElement.querySelectorAll('.ulradiocheck li')
+                    question.options = Array.from(options).map((option, index) => ({
+                      ...question.options[index],
+                      isSelected: option.querySelector('.jqChecked') !== null
                     }))
-                  }))
+                    surveyStore.updateQuestion(questionIndex, question)
+                  }
+                } else if (question.type === 'matrix') {
+                  if (!question.rows?.some(row => row.options.some(option => option.isSelected))) {
+                    const rows = questionElement.querySelectorAll('tbody tr')
+                    question.rows = Array.from(rows).map((row, rowIndex) => ({
+                      ...question.rows[rowIndex],
+                      options: Array.from(row.querySelectorAll('td')).map((td, optionIndex) => ({
+                        ...question.rows[rowIndex].options[optionIndex],
+                        isSelected: td.querySelector('.jqChecked') !== null
+                      }))
+                    }))
+                    surveyStore.updateQuestion(questionIndex, question)
+                  }
                 } else if (question.type === 'textarea') {
-                  const textarea = questionElement.querySelector('textarea') as HTMLTextAreaElement
-                  if (textarea) {
-                    question.textareaValue = textarea.value
+                  if (!question.textareaValue) {
+                    const textarea = questionElement.querySelector('textarea') as HTMLTextAreaElement
+                    if (textarea) {
+                      question.textareaValue = textarea.value
+                      surveyStore.updateQuestion(questionIndex, question)
+                    }
                   }
                 }
-                surveyStore.updateQuestion(questionIndex, question)
                 scrollToQuestion(questionIndex + 1)
               }
             }

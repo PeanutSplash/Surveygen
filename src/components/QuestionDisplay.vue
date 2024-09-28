@@ -18,7 +18,7 @@
         v-for="(option, index) in question.options"
         :key="option.value"
         :class="[
-          'rounded-lg p-3 transition-all duration-200 ease-in-out',
+          'rounded-lg p-3 transition-all duration-200 ease-in-out cursor-pointer',
           option.isSelected
             ? 'border-2 border-indigo-300 bg-indigo-50 shadow-sm'
             : 'border border-gray-200 bg-[#fefefe] hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-sm',
@@ -150,7 +150,21 @@ const updateTextareaValue = () => {
 }
 
 const handleOptionClick = (optionText: string) => {
-  eventBus.emit('showToast', { message: '请在页面中进行答题操作', type: 'warning' })
+  if (props.question.type === 'radio') {
+    // 单选题逻辑
+    props.question.options?.forEach(option => {
+      option.isSelected = option.text === optionText
+    })
+  } else if (props.question.type === 'checkbox') {
+    // 多选题逻辑
+    const option = props.question.options?.find(o => o.text === optionText)
+    if (option) {
+      option.isSelected = !option.isSelected
+    }
+  }
+  
+  // 更新问题选项
+  surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
 }
 
 onMounted(() => {
