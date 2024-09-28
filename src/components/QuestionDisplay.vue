@@ -23,6 +23,7 @@
             ? 'border-2 border-indigo-300 bg-indigo-50 shadow-sm'
             : 'border border-gray-200 bg-[#fefefe] hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-sm',
         ]"
+        @click="handleOptionClick(option.text)"
       >
         <span :class="{ 'font-medium text-indigo-700': option.isSelected, 'text-gray-700': !option.isSelected }">
           {{ option.text }}
@@ -85,6 +86,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { Question } from '../components/SurveyParser'
 import { useSurveyStore } from '../stores/surveyStore'
+import eventBus from '../utils/eventBus'
 
 const props = defineProps<{
   question: Question
@@ -145,6 +147,10 @@ const updateTextareaValue = () => {
       surveyStore.saveData() // 添加这行来保存更新后的数据
     }
   }
+}
+
+const handleOptionClick = (optionText: string) => {
+  eventBus.emit('showToast', { message: '请在页面中进行答题操作', type: 'warning' })
 }
 
 onMounted(() => {
