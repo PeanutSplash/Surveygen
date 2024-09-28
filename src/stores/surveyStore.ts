@@ -94,6 +94,19 @@ export const useSurveyStore = defineStore('survey', () => {
     }
   }
 
+  const hasUnansweredQuestions = (): boolean => {
+    return questions.value.some(question => {
+      if (question.type === 'radio' || question.type === 'checkbox') {
+        return !question.options?.some(option => option.isSelected)
+      } else if (question.type === 'matrix') {
+        return question.rows?.some(row => !row.options.some(option => option.isSelected))
+      } else if (question.type === 'textarea') {
+        return !question.textareaValue || question.textareaValue.trim() === ''
+      }
+      return false
+    })
+  }
+
   return {
     questions,
     isVisible,
@@ -105,5 +118,6 @@ export const useSurveyStore = defineStore('survey', () => {
     updateQuestion, // 添加这个新方法
     loadData,
     saveData,
+    hasUnansweredQuestions,
   }
 })

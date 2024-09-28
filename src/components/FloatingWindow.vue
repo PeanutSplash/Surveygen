@@ -40,7 +40,7 @@
               class="rounded-full px-2 py-0.5 text-xs font-medium transition-colors duration-200"
               :class="isAutoAnswerEnabled ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'"
             >
-              {{ isAutoAnswerEnabled ? '自动答题开启' : '自动答题关闭' }}
+              {{ isAutoAnswerEnabled ? '自动答题已开启' : '自动答题' }}
             </button>
             <span class="text-xs opacity-75">F3 显示/隐藏</span>
           </div>
@@ -86,6 +86,7 @@ import { useSurveyObserver } from '../composables/useSurveyObserver'
 import { simulateHumanClick, simulateSliderVerification } from '../utils/humanSimulation'
 import IconLogo from '../assets/logo.svg'
 import { ArrowPathRoundedSquareIcon } from '@heroicons/vue/24/solid'
+import eventBus from '../utils/eventBus'
 
 const surveyStore = useSurveyStore()
 const questionRefs = ref<{ [key: number]: any }>({})
@@ -226,6 +227,11 @@ const handleVerification = async () => {
 
 // 修改 fillSurveyAnswers 函数
 const fillSurveyAnswers = async () => {
+  if (surveyStore.hasUnansweredQuestions()) {
+    eventBus.emit('showToast', { message: '请先完成所有问题的回答', type: 'warning' })
+    return
+  }
+
   const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent')
   if (!surveyContent) return
 
@@ -306,6 +312,22 @@ const fillSurveyAnswers = async () => {
     // 再次点击提交按钮（如果验证后需要）
     await simulateHumanClick(submitButton)
   }
+
+  return new Promise<void>(resolve => {
+    // ���待页面跳转或其他完成标志
+    const checkCompletion = setInterval(() => {
+      if (document.location.href.includes('complete.aspx')) {
+        clearInterval(checkCompletion)
+        resolve()
+      }
+    }, 500)
+
+    // 设置超时
+    setTimeout(() => {
+      clearInterval(checkCompletion)
+      resolve()
+    }, 10000)
+  })
 }
 
 const observer = new MutationObserver(() => {
@@ -324,7 +346,7 @@ const observer = new MutationObserver(() => {
 const config = { subtree: true, childList: true }
 
 // 开始观察
-observer.observe(document, config)
+observer.observe(document.body, config)
 
 // 在组件卸载时停止观察
 onUnmounted(() => {
@@ -354,20 +376,19 @@ function handleAlertBox() {
 
 const isAutoAnswerEnabled = ref(false)
 
-const toggleAutoAnswer = () => {
+const toggleAutoAnswer = async () => {
+  if (surveyStore.hasUnansweredQuestions()) {
+    eventBus.emit('showToast', { message: '请先完成所有问题的回答', type: 'warning' })
+    return
+  }
+
   isAutoAnswerEnabled.value = !isAutoAnswerEnabled.value
   localStorage.setItem('autoAnswerEnabled', JSON.stringify(isAutoAnswerEnabled.value))
+
   if (isAutoAnswerEnabled.value) {
-    fillSurveyAnswers()
+    await fillSurveyAnswers()
   }
 }
-
-// 监听 isAutoAnswerEnabled 的变化
-watch(isAutoAnswerEnabled, newValue => {
-  if (newValue) {
-    fillSurveyAnswers()
-  }
-})
 
 onMounted(() => {
   // 清除 cookie
@@ -389,7 +410,7 @@ onMounted(() => {
   // 使用 useSurveyObserver composable
   useSurveyObserver(surveyStore, scrollToQuestion)
 
-  // 从本地存储中读取自动答题状态
+  // 从本地存储���读取自动答题状态
   const storedAutoAnswerEnabled = localStorage.getItem('autoAnswerEnabled')
   if (storedAutoAnswerEnabled !== null) {
     isAutoAnswerEnabled.value = JSON.parse(storedAutoAnswerEnabled)
@@ -499,3 +520,4 @@ onUnmounted(() => {
   animation: border-flow 3s linear infinite;
 }
 </style>
+
