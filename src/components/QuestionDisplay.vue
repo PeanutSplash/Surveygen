@@ -1,11 +1,16 @@
 <template>
   <div ref="questionRef" class="question mx-auto mb-6 max-w-6xl rounded-lg bg-[#fefefe] p-6 text-left transition-all duration-300 ease-in-out hover:shadow-lg">
     <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-sm font-medium text-gray-700">{{ question.index }}. {{ question.title }}</h3>
+      <div class="flex items-center space-x-3">
+        <h3 class="text-sm font-medium text-gray-700">{{ question.index }}. {{ question.title }}</h3>
+        <span :class="['rounded-md px-2 py-1 text-xs font-medium tracking-wide', getQuestionTypeClass(question.type)]">
+          {{ getQuestionTypeLabel(question.type) }}
+        </span>
+      </div>
       <button
         v-if="surveyStore.isAutoMode"
         @click="randomizeQuestion"
-        class="rounded bg-indigo-500 px-3 py-1 text-xs font-medium text-white transition-colors duration-200 hover:bg-indigo-600"
+        class="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
       >
         随机本题
       </button>
@@ -18,7 +23,7 @@
         v-for="(option, index) in question.options"
         :key="option.value"
         :class="[
-          'rounded-lg p-3 transition-all duration-200 ease-in-out cursor-pointer',
+          'cursor-pointer rounded-lg p-3 transition-all duration-200 ease-in-out',
           option.isSelected
             ? 'border-2 border-indigo-300 bg-indigo-50 shadow-sm'
             : 'border border-gray-200 bg-[#fefefe] hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-sm',
@@ -162,7 +167,7 @@ const handleOptionClick = (optionText: string) => {
       option.isSelected = !option.isSelected
     }
   }
-  
+
   // 更新问题选项
   surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
 }
@@ -222,35 +227,47 @@ const randomizeOptions = (options: any[]) => {
   })
 }
 
+const getQuestionTypeLabel = (type: string): string => {
+  switch (type) {
+    case 'radio':
+      return '单选题'
+    case 'checkbox':
+      return '多选题'
+    case 'matrix':
+      return '矩阵题'
+    case 'textarea':
+      return '文本题'
+    default:
+      return '未知题型'
+  }
+}
+
+const getQuestionTypeClass = (type: string): string => {
+  switch (type) {
+    case 'radio':
+      return 'bg-blue-50 text-blue-600 border border-blue-200'
+    case 'checkbox':
+      return 'bg-green-50 text-green-600 border border-green-200'
+    case 'matrix':
+      return 'bg-purple-50 text-purple-600 border border-purple-200'
+    case 'textarea':
+      return 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+    default:
+      return 'bg-gray-50 text-gray-600 border border-gray-200'
+  }
+}
+
 defineExpose({ questionRef })
 </script>
 
 <style scoped>
 .question {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease-in-out;
 }
 
 .question:hover {
-  transform: translateY(-2px);
-}
-
-@media (min-width: 640px) {
-  .question {
-    width: 95%;
-  }
-}
-
-@media (min-width: 1024px) {
-  .question {
-    width: 90%;
-  }
-}
-
-@media (min-width: 1280px) {
-  .question {
-    width: 85%;
-  }
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 </style>
