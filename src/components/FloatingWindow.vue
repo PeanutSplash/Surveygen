@@ -68,12 +68,7 @@
         <div v-if="isVerifying" class="relative mt-1 overflow-hidden rounded-lg p-0.5 shadow-lg">
           <div class="animate-border-flow absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-600 to-blue-500"></div>
           <div class="relative z-10 flex items-center space-x-3 rounded-md bg-gray-900 bg-opacity-90 px-4 py-3 text-white">
-            <div class="relative h-6 w-6">
-              <div class="absolute inset-0 h-full w-full animate-spin rounded-full border-b-2 border-white"></div>
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="h-2 w-2 rounded-full bg-white"></div>
-              </div>
-            </div>
+            <ArrowPathRoundedSquareIcon class="h-6 w-6 animate-spin text-white" />
             <span class="text-sm font-medium">{{ verificationStatus }}</span>
           </div>
         </div>
@@ -90,6 +85,7 @@ import { useSurveyStore } from '../stores/surveyStore'
 import { useSurveyObserver } from '../composables/useSurveyObserver'
 import { simulateHumanClick, simulateSliderVerification } from '../utils/humanSimulation'
 import IconLogo from '../assets/logo.svg'
+import { ArrowPathRoundedSquareIcon } from '@heroicons/vue/24/solid'
 
 const surveyStore = useSurveyStore()
 const questionRefs = ref<{ [key: number]: any }>({})
