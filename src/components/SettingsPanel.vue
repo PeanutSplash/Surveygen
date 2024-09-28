@@ -12,7 +12,7 @@
         <ToggleSwitch :is-active="isAutoMode" @toggle="$emit('toggle-mode')" />
       </div>
       <div class="flex items-center justify-between">
-        <span class="text-sm text-gray-700">自动答题</span>
+        <span class="text-sm text-gray-700">自动提交</span>
         <ToggleSwitch :is-active="isAutoAnswerEnabled" @toggle="$emit('toggle-auto-answer')" />
       </div>
       <button
