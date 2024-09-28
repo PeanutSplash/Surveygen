@@ -30,6 +30,9 @@
               </div>
             </div>
           </div>
+          <div class="relative h-1 w-full overflow-hidden bg-gray-200">
+            <div class="absolute left-0 top-0 h-full w-full bg-indigo-600 will-change-transform" :class="{ 'animate-progress-bar': isAnimating }"></div>
+          </div>
         </div>
       </transition>
     </div>
@@ -45,7 +48,9 @@ import eventBus from '../utils/eventBus'
 const message = ref('')
 const isVisible = ref(false)
 const toastType = ref('info')
+const isAnimating = ref(false)
 let timer: ReturnType<typeof setTimeout>
+const animationDuration = 3000 // 与 setTimeout 的时间保持一致
 
 const iconComponent = computed(() => {
   switch (toastType.value) {
@@ -70,21 +75,31 @@ const iconColorClass = computed(() => {
 })
 
 const showToast = (msg: string, type: string = 'info') => {
-  message.value = msg
-  toastType.value = type
-  isVisible.value = true
-
-  if (timer) {
-    clearTimeout(timer)
+  // 如果当前有显示的 toast，先移除它
+  if (isVisible.value) {
+    hideToast()
   }
 
-  timer = setTimeout(() => {
-    isVisible.value = false
-  }, 3000)
+  // 短暂延迟后显示新的 toast，以确保之前的 toast 已经完全消失
+  setTimeout(() => {
+    message.value = msg
+    toastType.value = type
+    isVisible.value = true
+    isAnimating.value = true
+
+    if (timer) {
+      clearTimeout(timer)
+    }
+
+    timer = setTimeout(() => {
+      hideToast()
+    }, animationDuration)
+  }, 100) // 100ms 的延迟，可以根据需要调整
 }
 
 const hideToast = () => {
   isVisible.value = false
+  isAnimating.value = false
   if (timer) {
     clearTimeout(timer)
   }
@@ -106,3 +121,18 @@ onUnmounted(() => {
   }
 })
 </script>
+
+<style scoped>
+@keyframes progress {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-progress-bar {
+  animation: progress 3s linear forwards;
+}
+</style>
