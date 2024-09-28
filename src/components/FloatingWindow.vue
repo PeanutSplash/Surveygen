@@ -1,5 +1,5 @@
 <template>
-  <div v-if="surveyStore.isVisible" class="!fixed !inset-0 !z-[9999] pointer-events-none">
+  <div v-if="surveyStore.isVisible" class="pointer-events-none !fixed !inset-0 !z-[9999]">
     <vue-draggable-resizable
       :w="600"
       :h="400"
@@ -16,14 +16,7 @@
           class="drag-handle flex cursor-move select-none items-center justify-between bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-2 text-white shadow-sm"
         >
           <div class="flex items-center space-x-2">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              ></path>
-            </svg>
+            <IconLogo class="h-4 w-4" />
             <span class="text-sm font-medium">Surveygen</span>
             <span class="rounded-full bg-white bg-opacity-20 px-1.5 py-0.5 text-xs">v{{ version }}</span>
           </div>
@@ -96,6 +89,7 @@ import QuestionDisplay from './QuestionDisplay.vue'
 import { useSurveyStore } from '../stores/surveyStore'
 import { useSurveyObserver } from '../composables/useSurveyObserver'
 import { simulateHumanClick, simulateSliderVerification } from '../utils/humanSimulation'
+import IconLogo from '../assets/logo.svg'
 
 const surveyStore = useSurveyStore()
 const questionRefs = ref<{ [key: number]: any }>({})
@@ -373,7 +367,7 @@ const toggleAutoAnswer = () => {
 }
 
 // 监听 isAutoAnswerEnabled 的变化
-watch(isAutoAnswerEnabled, (newValue) => {
+watch(isAutoAnswerEnabled, newValue => {
   if (newValue) {
     fillSurveyAnswers()
   }
