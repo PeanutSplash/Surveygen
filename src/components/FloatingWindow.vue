@@ -21,13 +21,11 @@
             <span class="rounded-full bg-white bg-opacity-20 px-1.5 py-0.5 text-xs">v{{ version }}</span>
           </div>
           <div class="flex items-center space-x-2">
-            <button
-              @click="toggleSettings"
-              class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30"
-            >
+            <button @click="toggleSettings" class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30">
               <CogIcon class="h-5 w-5" />
             </button>
             <span class="text-xs opacity-75">F3 显示/隐藏</span>
+            <span class="text-xs opacity-75">已提交: {{ surveyStore.submissionCount }} 次</span>
           </div>
         </div>
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
@@ -59,8 +57,8 @@
         </div>
       </transition>
       <transition name="fade">
-        <SettingsPanel 
-          v-if="isSettingsVisible" 
+        <SettingsPanel
+          v-if="isSettingsVisible"
           :is-auto-mode="surveyStore.isAutoMode"
           :is-auto-answer-enabled="isAutoAnswerEnabled"
           @close="toggleSettings"
@@ -88,6 +86,7 @@ import SettingsPanel from './SettingsPanel.vue'
 const surveyStore = useSurveyStore()
 const questionRefs = ref<{ [key: number]: any }>({})
 const scrollContainer = ref<HTMLElement | null>(null)
+const isRedirecting = ref(false)
 
 // 获取版本号
 const version = import.meta.env.VITE_APP_VERSION || '未知'
@@ -329,12 +328,15 @@ const fillSurveyAnswers = async () => {
 
 const observer = new MutationObserver(() => {
   const currentUrl = window.location.href
-  if (currentUrl.includes('https://www.wjx.cn/wjx/join/complete.aspx')) {
+  if (currentUrl.includes('https://www.wjx.cn/wjx/join/complete.aspx') && !isRedirecting.value) {
+    isRedirecting.value = true
     setTimeout(() => {
       const savedUrl = localStorage.getItem('currentSurveyUrl')
       if (savedUrl) {
+        surveyStore.incrementSubmissionCount()
         window.location.href = savedUrl
       }
+      isRedirecting.value = false
     }, 1000)
   }
 })
@@ -446,6 +448,9 @@ onMounted(() => {
   onUnmounted(() => {
     observer.disconnect()
   })
+
+  // 加载提交次数
+  surveyStore.loadSubmissionCount()
 })
 
 onUnmounted(() => {
@@ -523,4 +528,3 @@ onUnmounted(() => {
   animation: border-flow 3s linear infinite;
 }
 </style>
-

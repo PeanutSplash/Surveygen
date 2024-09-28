@@ -6,6 +6,7 @@ export const useSurveyStore = defineStore('survey', () => {
   const questions = ref<Question[]>([])
   const isVisible = ref(true)
   const isAutoMode = ref(false)
+  const submissionCount = ref(0)
 
   // 获取问卷ID
   const getSurveyId = () => {
@@ -32,7 +33,7 @@ export const useSurveyStore = defineStore('survey', () => {
 
   const parseAndUpdateSurvey = () => {
     const parsedQuestions = parseSurvey()
-    
+
     // 如果已经有加载的数据，合并新解析的数据和已有数据
     if (questions.value.length > 0) {
       questions.value = questions.value.map((existingQuestion: Question, index: number) => {
@@ -43,7 +44,7 @@ export const useSurveyStore = defineStore('survey', () => {
             parsedQuestion.options = parsedQuestion.options.map((option, optionIndex) => ({
               ...option,
               isSelected: existingQuestion.options?.[optionIndex]?.isSelected ?? false,
-              probability: existingQuestion.options?.[optionIndex]?.probability ?? 0
+              probability: existingQuestion.options?.[optionIndex]?.probability ?? 0,
             }))
           }
           // 保留已有的矩阵题状态和概率
@@ -53,8 +54,8 @@ export const useSurveyStore = defineStore('survey', () => {
               options: row.options.map((option, optionIndex) => ({
                 ...option,
                 isSelected: existingQuestion.rows?.[rowIndex]?.options[optionIndex]?.isSelected || false,
-                probability: existingQuestion.rows?.[rowIndex]?.options[optionIndex]?.probability || 0
-              }))
+                probability: existingQuestion.rows?.[rowIndex]?.options[optionIndex]?.probability || 0,
+              })),
             }))
           }
           // 保留文本框的值
@@ -67,7 +68,7 @@ export const useSurveyStore = defineStore('survey', () => {
     } else {
       questions.value = parsedQuestions
     }
-    
+
     saveData() // 解析后保存数据
   }
 
@@ -107,6 +108,16 @@ export const useSurveyStore = defineStore('survey', () => {
     })
   }
 
+  const incrementSubmissionCount = () => {
+    submissionCount.value++
+    localStorage.setItem('submissionCount', submissionCount.value.toString())
+  }
+
+  const loadSubmissionCount = () => {
+    const count = localStorage.getItem('submissionCount')
+    submissionCount.value = count ? parseInt(count, 10) : 0
+  }
+
   return {
     questions,
     isVisible,
@@ -115,9 +126,12 @@ export const useSurveyStore = defineStore('survey', () => {
     toggleVisibility,
     toggleMode,
     updateQuestionOptions,
-    updateQuestion, // 添加这个新方法
+    updateQuestion,
     loadData,
     saveData,
     hasUnansweredQuestions,
+    submissionCount,
+    incrementSubmissionCount,
+    loadSubmissionCount,
   }
 })
