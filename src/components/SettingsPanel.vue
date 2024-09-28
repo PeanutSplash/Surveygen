@@ -22,6 +22,9 @@
       >
         随机所有问题
       </button>
+      <div class="mt-4 text-xs text-gray-500">
+        <p>提示: 按下 F3 键可以快速显示/隐藏面板</p>
+      </div>
     </div>
   </div>
 </template>
