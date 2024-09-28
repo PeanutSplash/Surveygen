@@ -22,25 +22,10 @@
           </div>
           <div class="flex items-center space-x-2">
             <button
-              @click="surveyStore.toggleMode"
-              class="rounded-full px-2 py-0.5 text-xs font-medium transition-colors duration-200"
-              :class="surveyStore.isAutoMode ? 'bg-white text-blue-600' : 'bg-blue-400 text-white hover:bg-blue-300'"
+              @click="toggleSettings"
+              class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30"
             >
-              {{ surveyStore.isAutoMode ? '自动' : '手动' }}
-            </button>
-            <button
-              v-if="surveyStore.isAutoMode"
-              @click="randomizeAllQuestions"
-              class="rounded-full bg-green-500 px-2 py-0.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-green-400"
-            >
-              随机
-            </button>
-            <button
-              @click="toggleAutoAnswer"
-              class="rounded-full px-2 py-0.5 text-xs font-medium transition-colors duration-200"
-              :class="isAutoAnswerEnabled ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'"
-            >
-              {{ isAutoAnswerEnabled ? '自动答题已开启' : '自动答题' }}
+              <CogIcon class="h-5 w-5" />
             </button>
             <span class="text-xs opacity-75">F3 显示/隐藏</span>
           </div>
@@ -73,6 +58,17 @@
           </div>
         </div>
       </transition>
+      <transition name="fade">
+        <SettingsPanel 
+          v-if="isSettingsVisible" 
+          :is-auto-mode="surveyStore.isAutoMode"
+          :is-auto-answer-enabled="isAutoAnswerEnabled"
+          @close="toggleSettings"
+          @toggle-mode="surveyStore.toggleMode"
+          @toggle-auto-answer="toggleAutoAnswer"
+          @randomize-all="randomizeAllQuestions"
+        />
+      </transition>
     </vue-draggable-resizable>
   </div>
 </template>
@@ -85,8 +81,9 @@ import { useSurveyStore } from '../stores/surveyStore'
 import { useSurveyObserver } from '../composables/useSurveyObserver'
 import { simulateHumanClick, simulateSliderVerification } from '../utils/humanSimulation'
 import IconLogo from '../assets/logo.svg'
-import { ArrowPathRoundedSquareIcon } from '@heroicons/vue/24/solid'
+import { ArrowPathRoundedSquareIcon, CogIcon } from '@heroicons/vue/24/solid'
 import eventBus from '../utils/eventBus'
+import SettingsPanel from './SettingsPanel.vue'
 
 const surveyStore = useSurveyStore()
 const questionRefs = ref<{ [key: number]: any }>({})
@@ -314,7 +311,7 @@ const fillSurveyAnswers = async () => {
   }
 
   return new Promise<void>(resolve => {
-    // ���待页面跳转或其他完成标志
+    // 待页面跳转或其他完成标志
     const checkCompletion = setInterval(() => {
       if (document.location.href.includes('complete.aspx')) {
         clearInterval(checkCompletion)
@@ -390,6 +387,12 @@ const toggleAutoAnswer = async () => {
   }
 }
 
+const isSettingsVisible = ref(false)
+
+const toggleSettings = () => {
+  isSettingsVisible.value = !isSettingsVisible.value
+}
+
 onMounted(() => {
   // 清除 cookie
   clearCookie()
@@ -410,7 +413,7 @@ onMounted(() => {
   // 使用 useSurveyObserver composable
   useSurveyObserver(surveyStore, scrollToQuestion)
 
-  // 从本地存储���读取自动答题状态
+  // 从本地存储读取自动答题状态
   const storedAutoAnswerEnabled = localStorage.getItem('autoAnswerEnabled')
   if (storedAutoAnswerEnabled !== null) {
     isAutoAnswerEnabled.value = JSON.parse(storedAutoAnswerEnabled)
