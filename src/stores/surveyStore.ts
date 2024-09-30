@@ -118,6 +118,13 @@ export const useSurveyStore = defineStore('survey', () => {
     submissionCount.value = count ? parseInt(count, 10) : 0
   }
 
+  const resetSurvey = () => {
+    const surveyId = getSurveyId()
+    localStorage.removeItem(`survey_${surveyId}`)
+    questions.value = [] // 清空 store 中的问题数据
+    parseAndUpdateSurvey() // 重新解析问卷
+  }
+
   return {
     questions,
     isVisible,
@@ -133,5 +140,7 @@ export const useSurveyStore = defineStore('survey', () => {
     submissionCount,
     incrementSubmissionCount,
     loadSubmissionCount,
+    getSurveyId,
+    resetSurvey,
   }
 })

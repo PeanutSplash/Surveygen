@@ -22,6 +22,12 @@
       >
         随机所有问题
       </button>
+      <button
+        @click="$emit('reset-survey')"
+        class="w-full rounded-lg bg-green-500 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-teal-700"
+      >
+        重新解析问卷
+      </button>
       <div class="mt-4 text-xs text-gray-500">
         <p>提示: 按下 F3 键可以快速显示/隐藏面板</p>
       </div>
@@ -43,5 +49,6 @@ defineEmits<{
   (e: 'toggle-mode'): void
   (e: 'toggle-auto-answer'): void
   (e: 'randomize-all'): void
+  (e: 'reset-survey'): void // 添加新的事件
 }>()
 </script>

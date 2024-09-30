@@ -64,6 +64,7 @@
           @toggle-mode="surveyStore.toggleMode"
           @toggle-auto-answer="toggleAutoAnswer"
           @randomize-all="randomizeAllQuestions"
+          @reset-survey="resetSurvey"
         />
       </transition>
     </vue-draggable-resizable>
@@ -392,6 +393,17 @@ const isSettingsVisible = ref(false)
 
 const toggleSettings = () => {
   isSettingsVisible.value = !isSettingsVisible.value
+}
+
+// 修改 resetSurvey 函数
+const resetSurvey = () => {
+  surveyStore.resetSurvey()
+  
+  // 显示提示信息
+  eventBus.emit('showToast', { message: '问卷数据已重置', type: 'success' })
+  
+  // 关闭设置面板
+  isSettingsVisible.value = false
 }
 
 onMounted(() => {
