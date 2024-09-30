@@ -395,6 +395,9 @@ const toggleSettings = () => {
 }
 
 onMounted(() => {
+  // 解除禁用右键菜单和文本选择
+  document.oncontextmenu = document.onselectstart = null
+
   // 清除 cookie
   clearCookie()
 
