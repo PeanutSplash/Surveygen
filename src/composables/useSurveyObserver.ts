@@ -38,11 +38,9 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
           }))
         }
       } else if (question.type === 'textarea') {
-        if (!question.textareaValue) {
-          const textarea = questionElement.querySelector('textarea') as HTMLTextAreaElement
-          if (textarea) {
-            question.textareaValue = textarea.value
-          }
+        const textarea = questionElement.querySelector('textarea') as HTMLTextAreaElement
+        if (textarea) {
+          question.textareaValue = textarea.value
         }
       }
       surveyStore.updateQuestion(questionIndex, question)

@@ -95,6 +95,14 @@ export const useSurveyStore = defineStore('survey', () => {
     }
   }
 
+  const updateQuestionTextarea = (questionIndex: number, value: string) => {
+    const questionToUpdate = questions.value.find((q: Question) => q.index === questionIndex)
+    if (questionToUpdate && questionToUpdate.type === 'textarea') {
+      questionToUpdate.textareaValue = value
+      saveData() // 更新后保存数据
+    }
+  }
+
   const hasUnansweredQuestions = (): boolean => {
     return questions.value.some(question => {
       if (question.type === 'radio' || question.type === 'checkbox') {
@@ -142,5 +150,6 @@ export const useSurveyStore = defineStore('survey', () => {
     loadSubmissionCount,
     getSurveyId,
     resetSurvey,
+    updateQuestionTextarea,
   }
 })

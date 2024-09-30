@@ -74,7 +74,11 @@
       </table>
     </div>
     <div v-else-if="question.type === 'textarea'" class="mt-4">
-      <textarea class="w-full rounded-md border border-gray-300 p-2" :value="textareaValue" readonly></textarea>
+      <textarea
+        class="w-full rounded-md border border-gray-300 p-2"
+        v-model="textareaValue"
+        @input="updateTextareaValue"
+      ></textarea>
     </div>
     <div v-else class="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
       <p class="mb-2 font-medium text-yellow-700">未知题型</p>
@@ -145,13 +149,7 @@ const updateProbability = (index: number) => {
 let observer: MutationObserver | null = null
 
 const updateTextareaValue = () => {
-  if (props.question.type === 'textarea' && props.question.textareaId) {
-    const textarea = document.getElementById(props.question.textareaId) as HTMLTextAreaElement
-    if (textarea) {
-      textareaValue.value = textarea.value
-      surveyStore.saveData() // 添加这行来保存更新后的数据
-    }
-  }
+  surveyStore.updateQuestionTextarea(props.question.index, textareaValue.value)
 }
 
 const handleOptionClick = (optionText: string) => {
