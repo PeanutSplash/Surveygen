@@ -1,28 +1,4 @@
-type QuestionType = 'radio' | 'checkbox' | 'matrix' | 'textarea' | 'unknown'
-
-export interface Option {
-  text: string
-  value: string
-  isSelected: boolean
-  probability: number
-}
-
-export interface MatrixRow {
-  title: string
-  options: Option[]
-}
-
-export interface Question {
-  index: number
-  title: string
-  type: QuestionType
-  options?: Option[]
-  rows?: MatrixRow[]
-  headers?: string[]
-  textareaValue?: string
-  textareaId?: string
-  unknownContent?: string
-}
+import { QuestionType, Option, MatrixRow, Question } from '../types/survey'
 
 export function parseSurvey(): Question[] {
   const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent')
