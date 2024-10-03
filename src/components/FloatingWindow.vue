@@ -216,7 +216,7 @@ const handleVerification = async () => {
         isVerifying.value = false
         verificationStatus.value = '验证超时'
         resolve()
-      }, 15000) // ���持15秒的超时时间
+      }, 15000)
     })
   }
 }
@@ -231,9 +231,9 @@ const fillSurveyAnswers = async () => {
   const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent')
   if (!surveyContent) return
 
-  surveyStore.questions.forEach((question, index) => {
-    const questionElement = surveyContent.querySelector(`#divquestion${index + 1}`)
-    if (!questionElement) return
+  for (const question of surveyStore.questions) {
+    const questionElement = surveyContent.querySelector(`#divquestion${question.index}`)
+    if (!questionElement) continue
 
     if (question.options) {
       // 处理单选题和多选题
@@ -245,7 +245,7 @@ const fillSurveyAnswers = async () => {
       // 处理文本题
       handleTextareaQuestion(question)
     }
-  })
+  }
 
   // 滚动到页面底部
   window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
@@ -283,26 +283,15 @@ const fillSurveyAnswers = async () => {
 }
 
 // 处理单选题和多选题
-const handleOptionsQuestion = (questionElement: Element, question: Question) => {
-  const totalProbability = question.options!.reduce((sum, option) => sum + option.probability, 0)
-  let random = Math.random() * totalProbability
-  let selectedOption = null
+const handleOptionsQuestion = async (questionElement: Element, question: Question) => {
+  const isMultipleChoice = question.type === 'checkbox'
+  const options = question.options!
 
-  for (const option of question.options!) {
-    if (random < option.probability) {
-      selectedOption = option
-      break
-    }
-    random -= option.probability
-  }
-
-  if (selectedOption) {
-    const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
-    if (inputElement) {
-      inputElement.checked = true
-      const labelElement = inputElement.nextElementSibling as HTMLElement
-      if (labelElement) {
-        labelElement.click() // 模拟点击以触发样式变化
+  for (const option of options) {
+    if (option.isSelected || (isMultipleChoice && Math.random() < option.probability / 100)) {
+      const aElement = questionElement.querySelector(`a[rel="q${question.index}_${option.value}"]`) as HTMLAnchorElement
+      if (aElement) {
+        simulateHumanClick(aElement)
       }
     }
   }
