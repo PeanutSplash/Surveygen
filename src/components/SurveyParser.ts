@@ -1,24 +1,27 @@
+type QuestionType = 'radio' | 'checkbox' | 'matrix' | 'textarea' | 'unknown'
+
 export interface Option {
-  text: string;
-  value: string;
-  isSelected: boolean;
-  probability: number;
+  text: string
+  value: string
+  isSelected: boolean
+  probability: number
 }
 
 export interface MatrixRow {
-  title: string;
-  options: Option[];
+  title: string
+  options: Option[]
 }
 
 export interface Question {
-  index: number;
-  title: string;
-  type: 'radio' | 'checkbox' | 'matrix' | 'textarea';
-  options?: Option[];
-  rows?: MatrixRow[];
-  textareaValue?: string;
-  textareaId?: string;
-  unknownContent?: string;
+  index: number
+  title: string
+  type: QuestionType
+  options?: Option[]
+  rows?: MatrixRow[]
+  headers?: string[]
+  textareaValue?: string
+  textareaId?: string
+  unknownContent?: string
 }
 
 export function parseSurvey(): Question[] {
@@ -28,7 +31,7 @@ export function parseSurvey(): Question[] {
   const questions = surveyContent.querySelectorAll('.div_question')
   return Array.from(questions).map((question, index) => {
     const questionTitle = question.querySelector('.div_title_question')?.textContent || ''
-    const questionType = getQuestionType(question)
+    const questionType = determineQuestionType(question) as QuestionType
 
     let parsedQuestion: Partial<Question> = { type: questionType }
     switch (questionType) {
@@ -57,6 +60,18 @@ export function parseSurvey(): Question[] {
       ...parsedQuestion,
     } as Question
   })
+}
+
+function determineQuestionType(questionElement: Element): QuestionType {
+  if (questionElement.querySelector('.ulradiocheck')) {
+    const isMultiSelect = questionElement.querySelector('.jqCheckbox') !== null
+    return isMultiSelect ? 'checkbox' : 'radio'
+  } else if (questionElement.querySelector('table')) {
+    return 'matrix'
+  } else if (questionElement.querySelector('textarea')) {
+    return 'textarea'
+  }
+  return 'unknown'
 }
 
 function getQuestionType(questionElement: Element): string {

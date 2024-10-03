@@ -64,7 +64,7 @@
             <td
               v-for="(option, index) in row.options"
               :key="index"
-              :class="['whitespace-nowrap px-4 py-2 text-center cursor-pointer', option.isSelected ? 'bg-blue-100 font-medium text-blue-700' : 'text-gray-500']"
+              :class="['cursor-pointer whitespace-nowrap px-4 py-2 text-center', option.isSelected ? 'bg-blue-100 font-medium text-blue-700' : 'text-gray-500']"
               @click="handleMatrixOptionClick(row, option)"
             >
               {{ option.value }}
@@ -75,11 +75,7 @@
       </table>
     </div>
     <div v-else-if="question.type === 'textarea'" class="mt-4">
-      <textarea
-        class="w-full rounded-md border border-gray-300 p-2"
-        v-model="textareaValue"
-        @input="updateTextareaValue"
-      ></textarea>
+      <textarea class="w-full rounded-md border border-gray-300 p-2" v-model="textareaValue" @input="updateTextareaValue"></textarea>
     </div>
     <div v-else class="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
       <p class="mb-2 font-medium text-yellow-700">未知题型</p>

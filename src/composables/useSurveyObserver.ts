@@ -22,8 +22,10 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
         if (!question.options?.some(option => option.isSelected)) {
           const options = questionElement.querySelectorAll('.ulradiocheck li')
           question.options = Array.from(options).map((option, index) => ({
-            ...question.options?.[index],
+            text: option.querySelector('label')?.textContent || '',
+            value: option.querySelector('input')?.value || '',
             isSelected: option.querySelector('.jqChecked') !== null,
+            probability: question.options?.[index]?.probability || 0,
           }))
         }
       } else if (question.type === 'matrix') {
@@ -32,8 +34,10 @@ export function useSurveyObserver(surveyStore: ReturnType<typeof useSurveyStore>
           question.rows = Array.from(rows).map((row, rowIndex) => ({
             title: question.rows?.[rowIndex]?.title ?? '',
             options: Array.from(row.querySelectorAll('td')).map((td, optionIndex) => ({
-              ...question.rows?.[rowIndex]?.options?.[optionIndex],
+              text: question.rows?.[rowIndex]?.options?.[optionIndex]?.text ?? '',
+              value: question.rows?.[rowIndex]?.options?.[optionIndex]?.value ?? '',
               isSelected: td.querySelector('.jqChecked') !== null,
+              probability: question.rows?.[rowIndex]?.options?.[optionIndex]?.probability ?? 0,
             })),
           }))
         }
