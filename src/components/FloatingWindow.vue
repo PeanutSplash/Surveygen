@@ -17,7 +17,7 @@
           <div v-if="surveyStore.questions.length === 0" class="flex h-full flex-col items-center justify-center">
             <div class="h-16 w-16 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
             <p class="mt-4 text-lg font-semibold text-gray-700">正在等待问卷加载...</p>
-            <p class="mt-2 text-sm text-gray-500">��稍候，我们正在为您准备问卷内容</p>
+            <p class="mt-2 text-sm text-gray-500">请稍候，我们正在为您准备问卷内容</p>
           </div>
           <QuestionDisplay
             v-else
@@ -44,7 +44,7 @@
       <transition name="fade">
         <SettingsPanel
           v-if="isSettingsVisible"
-          :is-auto-mode="surveyStore.isAutoMode"
+          :is-advanced-mode="surveyStore.isAdvancedMode"
           :is-auto-answer-enabled="isAutoAnswerEnabled"
           @close="toggleSettings"
           @toggle-mode="surveyStore.toggleMode"

@@ -8,7 +8,7 @@
         </span>
       </div>
       <button
-        v-if="surveyStore.isAutoMode"
+        v-if="surveyStore.isAdvancedMode"
         @click="randomizeQuestion"
         class="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
       >
@@ -33,7 +33,7 @@
         <span :class="{ 'font-medium text-indigo-700': option.isSelected, 'text-gray-700': !option.isSelected }">
           {{ option.text }}
         </span>
-        <div v-if="surveyStore.isAutoMode" class="mt-2">
+        <div v-if="surveyStore.isAdvancedMode" class="mt-2">
           <label class="text-xs text-gray-500">概率：</label>
           <input
             type="number"
@@ -68,7 +68,7 @@
               @click="handleMatrixOptionClick(row, option)"
             >
               {{ option.value }}
-              <div v-if="surveyStore.isAutoMode" class="mt-1 text-xs text-gray-400">{{ option.probability.toFixed(0) }}%</div>
+              <div v-if="surveyStore.isAdvancedMode" class="mt-1 text-xs text-gray-400">{{ option.probability.toFixed(0) }}%</div>
             </td>
           </tr>
         </tbody>

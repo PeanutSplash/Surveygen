@@ -8,15 +8,15 @@
     </div>
     <div class="space-y-4">
       <div class="flex items-center justify-between">
-        <span class="text-sm text-gray-700">自动模式</span>
-        <ToggleSwitch :is-active="isAutoMode" @toggle="$emit('toggle-mode')" />
+        <span class="text-sm text-gray-700">高级模式</span>
+        <ToggleSwitch :is-active="isAdvancedMode" @toggle="$emit('toggle-mode')" />
       </div>
       <div class="flex items-center justify-between">
         <span class="text-sm text-gray-700">自动提交</span>
         <ToggleSwitch :is-active="isAutoAnswerEnabled" @toggle="$emit('toggle-auto-answer')" />
       </div>
       <button
-        v-if="isAutoMode"
+        v-if="isAdvancedMode"
         @click="$emit('randomize-all')"
         class="w-full rounded-lg bg-indigo-500 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-600"
       >
@@ -40,7 +40,7 @@ import { XMarkIcon } from '@heroicons/vue/24/solid'
 import ToggleSwitch from './ToggleSwitch.vue'
 
 defineProps<{
-  isAutoMode: boolean
+  isAdvancedMode: boolean
   isAutoAnswerEnabled: boolean
 }>()
 
@@ -49,6 +49,6 @@ defineEmits<{
   (e: 'toggle-mode'): void
   (e: 'toggle-auto-answer'): void
   (e: 'randomize-all'): void
-  (e: 'reset-survey'): void // 添加新的事件
+  (e: 'reset-survey'): void
 }>()
 </script>

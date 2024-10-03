@@ -6,7 +6,7 @@ import { Question, Option } from '../types/survey'
 export const useSurveyStore = defineStore('survey', () => {
   const questions = ref<Question[]>([])
   const isVisible = ref(true)
-  const isAutoMode = ref(false)
+  const isAdvancedMode = ref(false)
   const submissionCount = ref(0)
 
   // 获取问卷ID
@@ -78,7 +78,7 @@ export const useSurveyStore = defineStore('survey', () => {
   }
 
   const toggleMode = () => {
-    isAutoMode.value = !isAutoMode.value
+    isAdvancedMode.value = !isAdvancedMode.value
   }
 
   const updateQuestionOptions = (questionIndex: number, newOptions: Option[]) => {
@@ -145,7 +145,7 @@ export const useSurveyStore = defineStore('survey', () => {
   return {
     questions,
     isVisible,
-    isAutoMode,
+    isAdvancedMode,
     parseAndUpdateSurvey,
     toggleVisibility,
     toggleMode,
