@@ -216,7 +216,7 @@ const handleVerification = async () => {
         isVerifying.value = false
         verificationStatus.value = '验证超时'
         resolve()
-      }, 15000) // 保持15秒的超时时间
+      }, 15000) // ���持15秒的超时时间
     })
   }
 }
@@ -236,58 +236,14 @@ const fillSurveyAnswers = async () => {
     if (!questionElement) return
 
     if (question.options) {
-      const totalProbability = question.options.reduce((sum, option) => sum + option.probability, 0)
-      let random = Math.random() * totalProbability
-      let selectedOption = null
-
-      for (const option of question.options) {
-        if (random < option.probability) {
-          selectedOption = option
-          break
-        }
-        random -= option.probability
-      }
-
-      if (selectedOption) {
-        const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
-        if (inputElement) {
-          inputElement.checked = true
-          const labelElement = inputElement.nextElementSibling as HTMLElement
-          if (labelElement) {
-            labelElement.click() // 模拟点击以触发样式变化
-          }
-        }
-      }
+      // 处理单选题和多选题
+      handleOptionsQuestion(questionElement, question)
     } else if (question.rows) {
-      question.rows.forEach(row => {
-        const totalProbability = row.options.reduce((sum, option) => sum + option.probability, 0)
-        let random = Math.random() * totalProbability
-        let selectedOption = null
-
-        for (const option of row.options) {
-          if (random < option.probability) {
-            selectedOption = option
-            break
-          }
-          random -= option.probability
-        }
-
-        if (selectedOption) {
-          const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
-          if (inputElement) {
-            inputElement.checked = true
-            const labelElement = inputElement.nextElementSibling as HTMLElement
-            if (labelElement) {
-              labelElement.click() // 模拟点击以触发样式变化
-            }
-          }
-        }
-      })
+      // 处理矩阵题
+      handleMatrixQuestion(questionElement, question)
     } else if (question.type === 'textarea' && question.textareaId) {
-      const textareaElement = document.getElementById(question.textareaId) as HTMLTextAreaElement
-      if (textareaElement) {
-        textareaElement.value = question.textareaValue || ''
-      }
+      // 处理文本题
+      handleTextareaQuestion(question)
     }
   })
 
@@ -324,6 +280,67 @@ const fillSurveyAnswers = async () => {
       resolve()
     }, 10000)
   })
+}
+
+// 处理单选题和多选题
+const handleOptionsQuestion = (questionElement: Element, question: Question) => {
+  const totalProbability = question.options!.reduce((sum, option) => sum + option.probability, 0)
+  let random = Math.random() * totalProbability
+  let selectedOption = null
+
+  for (const option of question.options!) {
+    if (random < option.probability) {
+      selectedOption = option
+      break
+    }
+    random -= option.probability
+  }
+
+  if (selectedOption) {
+    const inputElement = questionElement.querySelector(`input[value="${selectedOption.value}"]`) as HTMLInputElement
+    if (inputElement) {
+      inputElement.checked = true
+      const labelElement = inputElement.nextElementSibling as HTMLElement
+      if (labelElement) {
+        labelElement.click() // 模拟点击以触发样式变化
+      }
+    }
+  }
+}
+
+// 处理矩阵题
+const handleMatrixQuestion = (questionElement: Element, question: Question) => {
+  question.rows!.forEach((row, rowIndex) => {
+    const totalProbability = row.options.reduce((sum, option) => sum + option.probability, 0)
+    let random = Math.random() * totalProbability
+    let selectedOption = null
+
+    for (const option of row.options) {
+      if (random < option.probability) {
+        selectedOption = option
+        break
+      }
+      random -= option.probability
+    }
+
+    if (selectedOption) {
+      const inputElement = questionElement.querySelector(`input[name="q${question.index}_${rowIndex}"][value="${selectedOption.value}"]`) as HTMLInputElement
+      if (inputElement) {
+        const aElement = inputElement.previousElementSibling as HTMLAnchorElement
+        if (aElement && aElement.tagName === 'A') {
+          aElement.click()
+        }
+      }
+    }
+  })
+}
+
+// 处理文本题
+const handleTextareaQuestion = (question: Question) => {
+  const textareaElement = document.getElementById(question.textareaId!) as HTMLTextAreaElement
+  if (textareaElement) {
+    textareaElement.value = question.textareaValue || ''
+  }
 }
 
 const observer = new MutationObserver(() => {
@@ -398,10 +415,10 @@ const toggleSettings = () => {
 // 修改 resetSurvey 函数
 const resetSurvey = () => {
   surveyStore.resetSurvey()
-  
+
   // 显示提示信息
   eventBus.emit('showToast', { message: '问卷数据已重置', type: 'success' })
-  
+
   // 关闭设置面板
   isSettingsVisible.value = false
 }
