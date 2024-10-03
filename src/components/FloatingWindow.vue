@@ -12,26 +12,12 @@
       class="!pointer-events-auto rounded-lg shadow-lg"
     >
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-[#fafafa]">
-        <div
-          class="drag-handle flex cursor-move select-none items-center justify-between bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-2 text-white shadow-sm"
-        >
-          <div class="flex items-center space-x-2">
-            <IconLogo class="h-4 w-4" />
-            <span class="text-sm font-medium">Surveygen</span>
-            <span class="rounded-full bg-white bg-opacity-20 px-1.5 py-0.5 text-xs">v{{ version }}</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button @click="toggleSettings" class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30">
-              <CogIcon class="h-5 w-5" />
-            </button>
-            <span class="text-xs opacity-75">已提交: {{ surveyStore.submissionCount }} 次</span>
-          </div>
-        </div>
+        <FloatingWindowHeader :version="version" :submission-count="surveyStore.submissionCount" @toggle-settings="toggleSettings" />
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
           <div v-if="surveyStore.questions.length === 0" class="flex h-full flex-col items-center justify-center">
             <div class="h-16 w-16 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
             <p class="mt-4 text-lg font-semibold text-gray-700">正在等待问卷加载...</p>
-            <p class="mt-2 text-sm text-gray-500">请稍候，我们正在为您准备问卷内容</p>
+            <p class="mt-2 text-sm text-gray-500">��稍候，我们正在为您准备问卷内容</p>
           </div>
           <QuestionDisplay
             v-else
@@ -75,11 +61,11 @@
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import 'vue-draggable-resizable/style.css'
 import QuestionDisplay from './QuestionDisplay.vue'
+import FloatingWindowHeader from './FloatingWindowHeader.vue'
 import { useSurveyStore } from '../stores/surveyStore'
 import { useSurveyObserver } from '../composables/useSurveyObserver'
 import { simulateHumanClick, simulateSliderVerification } from '../utils/humanSimulation'
-import IconLogo from '../assets/logo.svg'
-import { ArrowPathRoundedSquareIcon, CogIcon } from '@heroicons/vue/24/solid'
+import { ArrowPathRoundedSquareIcon } from '@heroicons/vue/24/solid'
 import eventBus from '../utils/eventBus'
 import SettingsPanel from './SettingsPanel.vue'
 
