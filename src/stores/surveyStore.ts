@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { parseSurvey, Question, Option } from '../components/SurveyParser'
+import { parseSurvey, Question, Option } from '../utils/SurveyParser'
 
 export const useSurveyStore = defineStore('survey', () => {
   const questions = ref<Question[]>([])

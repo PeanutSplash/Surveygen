@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Question, MatrixRow, Option } from '../components/SurveyParser'
+import { Question, MatrixRow, Option } from '../utils/SurveyParser'
 import { useSurveyStore } from '../stores/surveyStore'
 import eventBus from '../utils/eventBus'
 
