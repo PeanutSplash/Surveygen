@@ -1,21 +1,24 @@
 export interface Option {
-  value: string
-  text: string
-  isSelected: boolean
-  probability: number // 新增概率字段
+  text: string;
+  value: string;
+  isSelected: boolean;
+  probability: number;
+}
+
+export interface MatrixRow {
+  title: string;
+  options: Option[];
 }
 
 export interface Question {
-  index: number
-  title: string
-  type: string
-  options?: Option[]
-  headers?: string[]
-  rows?: Array<{ title: string; options: Array<Option> }>
-  isMultiSelect?: boolean
-  textareaValue?: string
-  textareaId?: string
-  unknownContent?: string
+  index: number;
+  title: string;
+  type: 'radio' | 'checkbox' | 'matrix' | 'textarea';
+  options?: Option[];
+  rows?: MatrixRow[];
+  textareaValue?: string;
+  textareaId?: string;
+  unknownContent?: string;
 }
 
 export function parseSurvey(): Question[] {

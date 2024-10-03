@@ -133,6 +133,14 @@ export const useSurveyStore = defineStore('survey', () => {
     parseAndUpdateSurvey() // 重新解析问卷
   }
 
+  const updateQuestionMatrix = (questionIndex: number, newRows: any[]) => {
+    const questionToUpdate = questions.value.find((q: Question) => q.index === questionIndex)
+    if (questionToUpdate && questionToUpdate.type === 'matrix') {
+      questionToUpdate.rows = newRows
+      saveData()
+    }
+  }
+
   return {
     questions,
     isVisible,
@@ -151,5 +159,6 @@ export const useSurveyStore = defineStore('survey', () => {
     getSurveyId,
     resetSurvey,
     updateQuestionTextarea,
+    updateQuestionMatrix,
   }
 })

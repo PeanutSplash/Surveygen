@@ -64,7 +64,8 @@
             <td
               v-for="(option, index) in row.options"
               :key="index"
-              :class="['whitespace-nowrap px-4 py-2 text-center', option.isSelected ? 'bg-blue-100 font-medium text-blue-700' : 'text-gray-500']"
+              :class="['whitespace-nowrap px-4 py-2 text-center cursor-pointer', option.isSelected ? 'bg-blue-100 font-medium text-blue-700' : 'text-gray-500']"
+              @click="handleMatrixOptionClick(row, option)"
             >
               {{ option.value }}
               <div v-if="surveyStore.isAutoMode" class="mt-1 text-xs text-gray-400">{{ option.probability.toFixed(0) }}%</div>
@@ -93,7 +94,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Question } from '../components/SurveyParser'
+import { Question, MatrixRow, Option } from '../components/SurveyParser'
 import { useSurveyStore } from '../stores/surveyStore'
 import eventBus from '../utils/eventBus'
 
@@ -168,6 +169,15 @@ const handleOptionClick = (optionText: string) => {
 
   // 更新问题选项
   surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
+}
+
+const handleMatrixOptionClick = (row: MatrixRow, clickedOption: Option) => {
+  row.options.forEach((option: Option) => {
+    option.isSelected = option === clickedOption
+  })
+  if (props.question.rows) {
+    surveyStore.updateQuestionMatrix(props.question.index, props.question.rows)
+  }
 }
 
 onMounted(() => {
