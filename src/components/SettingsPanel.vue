@@ -8,13 +8,14 @@
     </div>
     <div class="space-y-4">
       <div class="flex items-center justify-between">
-        <span class="text-sm text-gray-700">高级模式</span>
-        <ToggleSwitch :is-active="isAdvancedMode" @toggle="$emit('toggle-mode')" />
-      </div>
-      <div class="flex items-center justify-between">
         <span class="text-sm text-gray-700">自动提交</span>
         <ToggleSwitch :is-active="isAutoAnswerEnabled" @toggle="$emit('toggle-auto-answer')" />
       </div>
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-700">高级模式</span>
+        <ToggleSwitch :is-active="isAdvancedMode" @toggle="$emit('toggle-mode')" />
+      </div>
+
       <button
         v-if="isAdvancedMode"
         @click="$emit('randomize-all')"

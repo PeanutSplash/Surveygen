@@ -6,10 +6,10 @@
       <span class="rounded-full bg-white bg-opacity-20 px-1.5 py-0.5 text-xs">v{{ version }}</span>
     </div>
     <div class="flex items-center space-x-2">
+      <span class="text-xs opacity-75">已提交: {{ submissionCount }} 次</span>
       <button @click="toggleSettings" class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30">
         <CogIcon class="h-5 w-5" />
       </button>
-      <span class="text-xs opacity-75">已提交: {{ submissionCount }} 次</span>
     </div>
   </div>
 </template>
