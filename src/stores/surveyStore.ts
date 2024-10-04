@@ -34,7 +34,6 @@ export const useSurveyStore = defineStore('survey', () => {
 
   const parseAndUpdateSurvey = () => {
     const parsedQuestions = parseSurvey()
-
     // 如果已经有加载的数据，合并新解析的数据和已有数据
     if (questions.value.length > 0) {
       questions.value = questions.value.map((existingQuestion: Question, index: number) => {
@@ -62,6 +61,11 @@ export const useSurveyStore = defineStore('survey', () => {
           // 保留文本框的值
           if (existingQuestion.type === 'textarea' && parsedQuestion.type === 'textarea') {
             parsedQuestion.textareaValue = existingQuestion.textareaValue
+          }
+          // 保留选择题的选项和选中的值
+          if (existingQuestion.type === 'select' && parsedQuestion.type === 'select') {
+            parsedQuestion.selectOptions = existingQuestion.selectOptions
+            parsedQuestion.selectedValue = existingQuestion.selectedValue
           }
         }
         return parsedQuestion || existingQuestion
@@ -147,6 +151,15 @@ export const useSurveyStore = defineStore('survey', () => {
     }
   }
 
+  const updateQuestionSelectOptions = (questionIndex: number, newSelectOptions: Option[], selectedValue: string) => {
+    const questionToUpdate = questions.value.find((q: Question) => q.index === questionIndex)
+    if (questionToUpdate && questionToUpdate.type === 'select') {
+      questionToUpdate.selectOptions = newSelectOptions
+      questionToUpdate.selectedValue = selectedValue
+      saveData() // 更新选项后保存数据
+    }
+  }
+
   return {
     questions,
     isVisible,
@@ -166,5 +179,6 @@ export const useSurveyStore = defineStore('survey', () => {
     resetSurvey,
     updateQuestionTextarea,
     updateQuestionMatrix,
+    updateQuestionSelectOptions,
   }
 })

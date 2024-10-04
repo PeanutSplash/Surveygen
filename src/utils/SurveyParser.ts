@@ -27,6 +27,9 @@ export const parseSurvey = (): Question[] => {
       case 'textarea':
         parsedQuestion = { ...parsedQuestion, ...parseTextAreaQuestion(question) }
         break
+      case 'select':
+        parsedQuestion = { ...parsedQuestion, ...parseSelectQuestion(question) }
+        break
       default:
         parsedQuestion = {
           ...parsedQuestion,
@@ -52,6 +55,8 @@ const determineQuestionType = (questionElement: Element): QuestionType => {
     return isMatrixMultiSelect ? 'matrix-multiple' : 'matrix'
   } else if (questionElement.querySelector('textarea')) {
     return 'textarea'
+  } else if (questionElement.querySelector('select')) {
+    return 'select'
   }
   return 'unknown'
 }
@@ -190,6 +195,24 @@ const parseMatrixQuestion = (questionElement: Element) => {
   return {
     headers: headers,
     rows: parsedRows,
+  }
+}
+
+// 修改 parseSelectQuestion 函数
+const parseSelectQuestion = (questionElement: Element) => {
+  const select = questionElement.querySelector('select') as HTMLSelectElement
+  if (!select) return { selectOptions: [] }
+
+  const options = Array.from(select.querySelectorAll('option')).map(option => ({
+    value: option.value,
+    text: option.textContent || '',
+    isSelected: option.selected,
+    probability: option.selected ? 100 : 0,
+  }))
+
+  return {
+    selectOptions: options,
+    selectedValue: select.value,
   }
 }
 

@@ -1,4 +1,4 @@
-export type QuestionType = 'radio' | 'checkbox' | 'matrix' | 'matrix-multiple' | 'textarea' | 'unknown'
+export type QuestionType = 'radio' | 'checkbox' | 'matrix' | 'matrix-multiple' | 'textarea' | 'select' | 'unknown'
 
 export interface Option {
   text: string
@@ -22,4 +22,6 @@ export interface Question {
   textareaValue?: string
   textareaId?: string
   unknownContent?: string
+  selectOptions?: Option[] // 用于下拉选择题
+  selectedValue?: string // 用于存储选中的值
 }

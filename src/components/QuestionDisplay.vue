@@ -77,6 +77,28 @@
     <div v-else-if="question.type === 'textarea'" class="mt-4">
       <textarea class="w-full rounded-md border border-gray-300 p-2" v-model="textareaValue" @input="updateTextareaValue"></textarea>
     </div>
+    <div v-else-if="question.type === 'select'" class="mt-4">
+      <select v-model="selectedValue" class="w-full rounded-md border border-gray-300 p-2">
+        <option v-for="option in question.selectOptions" :key="option.value" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
+      <div v-if="surveyStore.isAdvancedMode" class="mt-2">
+        <div v-for="option in question.selectOptions" :key="option.value" class="flex items-center space-x-2">
+          <span>{{ option.text }}:</span>
+          <input
+            type="number"
+            v-model.number="option.probability"
+            min="0"
+            max="100"
+            step="1"
+            class="w-16 rounded border p-1 text-xs"
+            @input="updateSelectProbability(option)"
+          />
+          <span class="text-xs text-gray-500">%</span>
+        </div>
+      </div>
+    </div>
     <div v-else class="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
       <p class="mb-2 font-medium text-yellow-700">未知题型</p>
       <p class="text-sm text-yellow-600">这是一个未识别的问题类型。我们正在努力支持更多的问题类型。</p>
@@ -89,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { Question, MatrixRow, Option } from '../types/survey'
 import { useSurveyStore } from '../stores/surveyStore'
 import eventBus from '../utils/eventBus'
@@ -102,6 +124,14 @@ const surveyStore = useSurveyStore()
 
 const questionRef = ref<HTMLElement | null>(null)
 const textareaValue = ref(props.question.textareaValue || '')
+
+// 添加这个计算属性
+const selectedValue = computed({
+  get: () => props.question.selectedValue || '',
+  set: value => {
+    handleSelectChange(value)
+  },
+})
 
 const updateProbability = (index: number) => {
   if (props.question.options) {
@@ -151,7 +181,7 @@ const updateTextareaValue = () => {
 
 const handleOptionClick = (optionText: string) => {
   if (props.question.type === 'radio') {
-    // 单选题逻辑
+    // 单选逻辑
     props.question.options?.forEach(option => {
       option.isSelected = option.text === optionText
     })
@@ -179,6 +209,37 @@ const handleMatrixOptionClick = (row: MatrixRow, clickedOption: Option) => {
   }
   if (props.question.rows) {
     surveyStore.updateQuestionMatrix(props.question.index, props.question.rows)
+  }
+}
+
+const handleSelectChange = (value: string) => {
+  if (props.question.selectOptions) {
+    props.question.selectOptions.forEach(option => {
+      option.isSelected = option.value === value
+      option.probability = option.isSelected ? 100 : 0
+    })
+    // 更新当前问题的数据
+    surveyStore.updateQuestionSelectOptions(props.question.index, props.question.selectOptions, value)
+  }
+}
+
+const updateSelectProbability = (updatedOption: Option) => {
+  if (props.question.selectOptions) {
+    let totalProbability = props.question.selectOptions.reduce(
+      (sum, option) => sum + (option === updatedOption ? updatedOption.probability : option.probability),
+      0,
+    )
+
+    if (totalProbability > 100) {
+      const excess = totalProbability - 100
+      props.question.selectOptions.forEach(option => {
+        if (option !== updatedOption) {
+          option.probability = Math.max(0, option.probability - excess / (props.question.selectOptions!.length - 1))
+        }
+      })
+    }
+
+    surveyStore.updateQuestion(props.question.index, props.question)
   }
 }
 
@@ -249,6 +310,8 @@ const getQuestionTypeLabel = (type: string): string => {
       return '矩阵多选题'
     case 'textarea':
       return '文本题'
+    case 'select':
+      return '下拉选择题'
     default:
       return '未知题型'
   }
@@ -266,6 +329,8 @@ const getQuestionTypeClass = (type: string): string => {
       return 'bg-pink-50 text-pink-600 border border-pink-200'
     case 'textarea':
       return 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+    case 'select':
+      return 'bg-indigo-50 text-indigo-600 border border-indigo-200'
     default:
       return 'bg-gray-50 text-gray-600 border border-gray-200'
   }
