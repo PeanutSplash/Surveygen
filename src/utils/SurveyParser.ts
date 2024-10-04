@@ -21,6 +21,9 @@ export const parseSurvey = (): Question[] => {
       case 'matrix':
         parsedQuestion = { ...parsedQuestion, ...parseMatrixQuestion(question) }
         break
+      case 'matrix-multiple':
+        parsedQuestion = { ...parsedQuestion, ...parseMatrixCheckboxQuestion(question) }
+        break
       case 'textarea':
         parsedQuestion = { ...parsedQuestion, ...parseTextAreaQuestion(question) }
         break
@@ -45,7 +48,8 @@ const determineQuestionType = (questionElement: Element): QuestionType => {
     const isMultiSelect = questionElement.querySelector('.jqCheckbox') !== null
     return isMultiSelect ? 'checkbox' : 'radio'
   } else if (questionElement.querySelector('table')) {
-    return 'matrix'
+    const isMatrixMultiSelect = questionElement.querySelector('table .jqCheckbox') !== null
+    return isMatrixMultiSelect ? 'matrix-multiple' : 'matrix'
   } else if (questionElement.querySelector('textarea')) {
     return 'textarea'
   }
@@ -95,6 +99,47 @@ const parseCheckboxQuestion = (questionElement: Element) => {
 
   return {
     options: parsedOptions,
+    isMultiSelect: true,
+  }
+}
+
+// 解析矩阵多选题
+const parseMatrixCheckboxQuestion = (questionElement: Element) => {
+  const table = questionElement.querySelector('table')
+  if (!table) return { headers: [], rows: [] }
+
+  const headers = Array.from(table.querySelectorAll('thead td')).map(td => td.textContent || '')
+  const rows = table.querySelectorAll('tbody tr')
+
+  const parsedRows = Array.from(rows).map(row => {
+    const rowTitle = row.querySelector('th')?.textContent || ''
+    const rowOptions = Array.from(row.querySelectorAll('td')).map(td => {
+      const input = td.querySelector('input') as HTMLInputElement
+      const isChecked = td.querySelector('.jqCheckbox.jqChecked') !== null
+      return {
+        value: input?.value || '',
+        text: input?.value || '',
+        isSelected: isChecked,
+        probability: isChecked ? 80 : 0,
+      }
+    })
+
+    // 计算未选中选项的概率
+    const unselectedOptions = rowOptions.filter(option => !option.isSelected)
+    const remainingProbability = unselectedOptions.length > 0 ? 20 / unselectedOptions.length : 0
+    unselectedOptions.forEach(option => {
+      option.probability = remainingProbability
+    })
+
+    return {
+      title: rowTitle,
+      options: rowOptions,
+    }
+  })
+
+  return {
+    headers: headers,
+    rows: parsedRows,
     isMultiSelect: true,
   }
 }

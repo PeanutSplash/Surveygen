@@ -1,4 +1,4 @@
-export type QuestionType = 'radio' | 'checkbox' | 'matrix' | 'textarea' | 'unknown'
+export type QuestionType = 'radio' | 'checkbox' | 'matrix' | 'matrix-multiple' | 'textarea' | 'unknown'
 
 export interface Option {
   text: string

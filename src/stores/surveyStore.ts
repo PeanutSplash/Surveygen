@@ -110,10 +110,10 @@ export const useSurveyStore = defineStore('survey', () => {
       if (question.type === 'unknown') {
         return false
       }
-      
+
       if (question.type === 'radio' || question.type === 'checkbox') {
         return !question.options?.some(option => option.isSelected)
-      } else if (question.type === 'matrix') {
+      } else if (question.type === 'matrix' || question.type === 'matrix-multiple') {
         return question.rows?.some(row => !row.options.some(option => option.isSelected))
       } else if (question.type === 'textarea') {
         return !question.textareaValue || question.textareaValue.trim() === ''
@@ -141,7 +141,7 @@ export const useSurveyStore = defineStore('survey', () => {
 
   const updateQuestionMatrix = (questionIndex: number, newRows: any[]) => {
     const questionToUpdate = questions.value.find((q: Question) => q.index === questionIndex)
-    if (questionToUpdate && questionToUpdate.type === 'matrix') {
+    if (questionToUpdate && (questionToUpdate.type === 'matrix' || questionToUpdate.type === 'matrix-multiple')) {
       questionToUpdate.rows = newRows
       saveData()
     }

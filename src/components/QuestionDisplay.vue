@@ -48,7 +48,7 @@
         </div>
       </div>
     </div>
-    <div v-else-if="question.type === 'matrix'" class="overflow-x-auto">
+    <div v-else-if="question.type === 'matrix' || question.type === 'matrix-multiple'" class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200 text-xs">
         <thead class="bg-gray-50">
           <tr>
@@ -168,9 +168,15 @@ const handleOptionClick = (optionText: string) => {
 }
 
 const handleMatrixOptionClick = (row: MatrixRow, clickedOption: Option) => {
-  row.options.forEach((option: Option) => {
-    option.isSelected = option === clickedOption
-  })
+  if (props.question.type === 'matrix') {
+    // 单选逻辑
+    row.options.forEach((option: Option) => {
+      option.isSelected = option === clickedOption
+    })
+  } else if (props.question.type === 'matrix-multiple') {
+    // 多选逻辑
+    clickedOption.isSelected = !clickedOption.isSelected
+  }
   if (props.question.rows) {
     surveyStore.updateQuestionMatrix(props.question.index, props.question.rows)
   }
@@ -239,6 +245,8 @@ const getQuestionTypeLabel = (type: string): string => {
       return '多选题'
     case 'matrix':
       return '矩阵题'
+    case 'matrix-multiple':
+      return '矩阵多选题'
     case 'textarea':
       return '文本题'
     default:
@@ -254,6 +262,8 @@ const getQuestionTypeClass = (type: string): string => {
       return 'bg-green-50 text-green-600 border border-green-200'
     case 'matrix':
       return 'bg-purple-50 text-purple-600 border border-purple-200'
+    case 'matrix-multiple':
+      return 'bg-pink-50 text-pink-600 border border-pink-200'
     case 'textarea':
       return 'bg-yellow-50 text-yellow-600 border border-yellow-200'
     default:
