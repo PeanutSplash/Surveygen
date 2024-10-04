@@ -204,8 +204,9 @@ const handleVerification = async () => {
 
 // 修改 fillSurveyAnswers 函数
 const fillSurveyAnswers = async () => {
-  if (surveyStore.hasUnansweredQuestions()) {
-    eventBus.emit('showToast', { message: '请先完成所有问题的回答', type: 'warning' })
+  const { hasUnanswered, unansweredQuestions } = surveyStore.hasUnansweredQuestions()
+  if (hasUnanswered) {
+    eventBus.emit('showToast', { message: `请先完成所有问题的回答, 未完成的题目: ${unansweredQuestions.join(', ')}`, type: 'warning' })
     return
   }
 
@@ -406,8 +407,9 @@ function handleAlertBox() {
 const isAutoAnswerEnabled = ref(false)
 
 const toggleAutoAnswer = async () => {
-  if (surveyStore.hasUnansweredQuestions()) {
-    eventBus.emit('showToast', { message: '请先完成所有问题的回答', type: 'warning' })
+  const { hasUnanswered, unansweredQuestions } = surveyStore.hasUnansweredQuestions()
+  if (hasUnanswered) {
+    eventBus.emit('showToast', { message: `请先完成所有问题的回答。未完成的题号: ${unansweredQuestions.join(', ')}`, type: 'warning' })
     return
   }
 

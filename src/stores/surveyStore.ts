@@ -108,24 +108,37 @@ export const useSurveyStore = defineStore('survey', () => {
     }
   }
 
-  const hasUnansweredQuestions = (): boolean => {
-    return questions.value.some(question => {
+  const hasUnansweredQuestions = (): { hasUnanswered: boolean; unansweredQuestions: number[] } => {
+    const unansweredQuestions: number[] = []
+
+    questions.value.forEach(question => {
       // 排除未知题型
       if (question.type === 'unknown') {
-        return false
+        return
       }
 
+      let isUnanswered = false
+
       if (question.type === 'radio' || question.type === 'checkbox') {
-        return !question.options?.some(option => option.isSelected)
+        isUnanswered = !question.options?.some(option => option.isSelected)
       } else if (question.type === 'matrix' || question.type === 'matrix-multiple') {
-        return question.rows?.some(row => !row.options.some(option => option.isSelected))
+        isUnanswered = question.rows ? question.rows.some(row => !row.options.some(option => option.isSelected)) : true
       } else if (question.type === 'textarea') {
-        return !question.textareaValue || question.textareaValue.trim() === ''
+        isUnanswered = !question.textareaValue || question.textareaValue.trim() === ''
       } else if (question.type === 'scale') {
-        return !question.scaleOptions?.some(option => option.isSelected)
+        isUnanswered = !question.scaleOptions?.some(option => option.isSelected)
+      } else if (question.type === 'select') {
+        isUnanswered = !question.selectedValue
       }
-      return false
+
+      if (isUnanswered) {
+        unansweredQuestions.push(question.index)
+      }
     })
+
+    console.log('未完成的题目:', unansweredQuestions)
+
+    return { hasUnanswered: unansweredQuestions.length > 0, unansweredQuestions }
   }
 
   const incrementSubmissionCount = () => {
