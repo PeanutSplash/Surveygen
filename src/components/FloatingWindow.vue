@@ -230,6 +230,9 @@ const fillSurveyAnswers = async () => {
     } else if (question.type === 'textarea' && question.textareaId) {
       // 处理文本题
       handleTextareaQuestion(question)
+    } else if (question.type === 'select') {
+      // 处理下拉框题
+      handleSelectQuestion(questionElement, question)
     }
   }
 
@@ -315,6 +318,30 @@ const handleTextareaQuestion = (question: Question) => {
   const textareaElement = document.getElementById(question.textareaId!) as HTMLTextAreaElement
   if (textareaElement) {
     textareaElement.value = question.textareaValue || ''
+  }
+}
+
+// 修改处理下拉框题的函数
+const handleSelectQuestion = (questionElement: Element, question: Question) => {
+  const selectElement = questionElement.querySelector(`select[name="q${question.index}"]`) as HTMLSelectElement
+  if (selectElement) {
+    // 找到并选中对应的选项
+    selectElement.value = question.selectedValue
+
+    // 触发 change 事件，以确保任何相关的事件监听器都能被触发
+    const event = new Event('change', { bubbles: true })
+    selectElement.dispatchEvent(event)
+
+    // 更新 Select2 的显示文本
+    // const select2Container = questionElement.querySelector('.select2-container') as HTMLElement
+    // if (select2Container) {
+    //   const selectedOption = selectElement.options[selectElement.selectedIndex]
+    //   const spanElement = select2Container.querySelector('.select2-selection__rendered') as HTMLElement
+    //   if (spanElement && selectedOption) {
+    //     spanElement.textContent = selectedOption.text
+    //     spanElement.setAttribute('title', selectedOption.text)
+    //   }
+    // }
   }
 }
 
