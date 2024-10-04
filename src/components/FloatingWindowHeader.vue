@@ -9,7 +9,7 @@
       <button @click="toggleSettings" class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30">
         <CogIcon class="h-5 w-5" />
       </button>
-      <span class="text-xs opacity-75">近1h已提交: {{ submissionCount }} 次</span>
+      <span class="text-xs opacity-75">已提交: {{ submissionCount }} 次</span>
     </div>
   </div>
 </template>

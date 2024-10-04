@@ -25,7 +25,7 @@ export const injectResetSurveyButton = () => {
     onClick: () => {
       surveyStore.resetSurvey()
       eventBus.emit('showToast', {
-        message: '标准答案已重新解析',
+        message: '已解析为标准答案',
         type: 'success',
       })
     },
