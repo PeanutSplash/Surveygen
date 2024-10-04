@@ -1,6 +1,7 @@
 import { QuestionType, Option, MatrixRow, Question } from '../types/survey'
 
-export function parseSurvey(): Question[] {
+// 解析调查问卷，返回问题数组
+export const parseSurvey = (): Question[] => {
   const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent')
   if (!surveyContent) return []
 
@@ -38,7 +39,8 @@ export function parseSurvey(): Question[] {
   })
 }
 
-function determineQuestionType(questionElement: Element): QuestionType {
+// 确定问题类型
+const determineQuestionType = (questionElement: Element): QuestionType => {
   if (questionElement.querySelector('.ulradiocheck')) {
     const isMultiSelect = questionElement.querySelector('.jqCheckbox') !== null
     return isMultiSelect ? 'checkbox' : 'radio'
@@ -50,19 +52,8 @@ function determineQuestionType(questionElement: Element): QuestionType {
   return 'unknown'
 }
 
-function getQuestionType(questionElement: Element): string {
-  if (questionElement.querySelector('.ulradiocheck')) {
-    const isMultiSelect = questionElement.querySelector('.jqCheckbox') !== null
-    return isMultiSelect ? 'checkbox' : 'radio'
-  } else if (questionElement.querySelector('table')) {
-    return 'matrix'
-  } else if (questionElement.querySelector('textarea')) {
-    return 'textarea'
-  }
-  return 'unknown'
-}
-
-function parseRadioQuestion(questionElement: Element) {
+// 解析单选题
+const parseRadioQuestion = (questionElement: Element) => {
   const options = questionElement.querySelectorAll('.ulradiocheck li')
   const parsedOptions = Array.from(options).map(option => {
     const input = option.querySelector('input')
@@ -84,7 +75,8 @@ function parseRadioQuestion(questionElement: Element) {
   }
 }
 
-function parseCheckboxQuestion(questionElement: Element) {
+// 解析多选题
+const parseCheckboxQuestion = (questionElement: Element) => {
   const options = questionElement.querySelectorAll('.ulradiocheck li')
   const parsedOptions = Array.from(options).map(option => {
     const input = option.querySelector('input')
@@ -107,7 +99,8 @@ function parseCheckboxQuestion(questionElement: Element) {
   }
 }
 
-function parseTextAreaQuestion(questionElement: Element) {
+// 解析文本区域题
+const parseTextAreaQuestion = (questionElement: Element) => {
   const textarea = questionElement.querySelector('textarea') as HTMLTextAreaElement
   return {
     textareaValue: textarea?.value || '',
@@ -115,7 +108,8 @@ function parseTextAreaQuestion(questionElement: Element) {
   }
 }
 
-function parseMatrixQuestion(questionElement: Element) {
+// 解析矩阵题
+const parseMatrixQuestion = (questionElement: Element) => {
   const table = questionElement.querySelector('table')
   if (!table) return { headers: [], rows: [] }
 
@@ -154,7 +148,8 @@ function parseMatrixQuestion(questionElement: Element) {
   }
 }
 
-function updateOptionProbabilities(options: Option[]) {
+// 更新选项概率
+const updateOptionProbabilities = (options: Option[]) => {
   const selectedOptions = options.filter(option => option.isSelected)
   const unselectedOptions = options.filter(option => !option.isSelected)
 
