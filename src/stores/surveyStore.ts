@@ -106,6 +106,11 @@ export const useSurveyStore = defineStore('survey', () => {
 
   const hasUnansweredQuestions = (): boolean => {
     return questions.value.some(question => {
+      // 排除未知题型
+      if (question.type === 'unknown') {
+        return false
+      }
+      
       if (question.type === 'radio' || question.type === 'checkbox') {
         return !question.options?.some(option => option.isSelected)
       } else if (question.type === 'matrix') {
