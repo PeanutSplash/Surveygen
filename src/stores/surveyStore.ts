@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { parseSurvey } from '../utils/SurveyParser'
-import { Question, Option } from '../types/survey'
+import { Question, Option, ScaleOption } from '../types/survey'
 
 export const useSurveyStore = defineStore('survey', () => {
   const questions = ref<Question[]>([])
@@ -121,6 +121,8 @@ export const useSurveyStore = defineStore('survey', () => {
         return question.rows?.some(row => !row.options.some(option => option.isSelected))
       } else if (question.type === 'textarea') {
         return !question.textareaValue || question.textareaValue.trim() === ''
+      } else if (question.type === 'scale') {
+        return !question.scaleOptions?.some(option => option.isSelected)
       }
       return false
     })
@@ -160,6 +162,14 @@ export const useSurveyStore = defineStore('survey', () => {
     }
   }
 
+  const updateQuestionScaleOptions = (questionIndex: number, newScaleOptions: ScaleOption[]) => {
+    const questionToUpdate = questions.value.find((q: Question) => q.index === questionIndex)
+    if (questionToUpdate && questionToUpdate.type === 'scale') {
+      questionToUpdate.scaleOptions = newScaleOptions
+      saveData() // 更新选项后保存数据
+    }
+  }
+
   return {
     questions,
     isVisible,
@@ -180,5 +190,6 @@ export const useSurveyStore = defineStore('survey', () => {
     updateQuestionTextarea,
     updateQuestionMatrix,
     updateQuestionSelectOptions,
+    updateQuestionScaleOptions,
   }
 })

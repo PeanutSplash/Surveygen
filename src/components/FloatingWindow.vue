@@ -68,6 +68,7 @@ import { simulateHumanClick, simulateSliderVerification } from '../utils/humanSi
 import { ArrowPathRoundedSquareIcon } from '@heroicons/vue/24/solid'
 import eventBus from '../utils/eventBus'
 import SettingsPanel from './SettingsPanel.vue'
+import { Question, ScaleOption } from '../types/survey'
 
 const surveyStore = useSurveyStore()
 const questionRefs = ref<{ [key: number]: any }>({})
@@ -115,12 +116,6 @@ type Option = {
 
 type Row = {
   options: Option[]
-  [key: string]: any
-}
-
-type Question = {
-  options?: Option[]
-  rows?: Row[]
   [key: string]: any
 }
 
@@ -233,6 +228,9 @@ const fillSurveyAnswers = async () => {
     } else if (question.type === 'select') {
       // 处理下拉框题
       handleSelectQuestion(questionElement, question)
+    } else if (question.type === 'scale') {
+      // 处理量表题
+      handleScaleQuestion(questionElement, question)
     }
   }
 
@@ -326,7 +324,7 @@ const handleSelectQuestion = (questionElement: Element, question: Question) => {
   const selectElement = questionElement.querySelector(`select[name="q${question.index}"]`) as HTMLSelectElement
   if (selectElement) {
     // 找到并选中对应的选项
-    selectElement.value = question.selectedValue
+    selectElement.value = question.selectedValue!
 
     // 触发 change 事件，以确保任何相关的事件监听器都能被触发
     const event = new Event('change', { bubbles: true })
@@ -342,6 +340,19 @@ const handleSelectQuestion = (questionElement: Element, question: Question) => {
     //     spanElement.setAttribute('title', selectedOption.text)
     //   }
     // }
+  }
+}
+
+// 处理量表题
+const handleScaleQuestion = (questionElement: Element, question: Question) => {
+  if (question.scaleOptions) {
+    const selectedOption = question.scaleOptions.find((option: ScaleOption) => option.isSelected)
+    if (selectedOption) {
+      const liElement = questionElement.querySelector(`li[value="${selectedOption.value}"]`) as HTMLLIElement
+      if (liElement) {
+        simulateHumanClick(liElement)
+      }
+    }
   }
 }
 

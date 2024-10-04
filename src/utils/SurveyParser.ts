@@ -1,4 +1,4 @@
-import { QuestionType, Option, MatrixRow, Question } from '../types/survey'
+import { QuestionType, Option, MatrixRow, Question, ScaleOption } from '../types/survey'
 
 // 解析调查问卷，返回问题数组
 export const parseSurvey = (): Question[] => {
@@ -30,6 +30,9 @@ export const parseSurvey = (): Question[] => {
       case 'select':
         parsedQuestion = { ...parsedQuestion, ...parseSelectQuestion(question) }
         break
+      case 'scale':
+        parsedQuestion = { ...parsedQuestion, ...parseScaleQuestion(question) }
+        break
       default:
         parsedQuestion = {
           ...parsedQuestion,
@@ -57,6 +60,8 @@ const determineQuestionType = (questionElement: Element): QuestionType => {
     return 'textarea'
   } else if (questionElement.querySelector('select')) {
     return 'select'
+  } else if (questionElement.querySelector('.div_table_radio_question')) {
+    return 'scale'
   }
   return 'unknown'
 }
@@ -195,6 +200,34 @@ const parseMatrixQuestion = (questionElement: Element) => {
   return {
     headers: headers,
     rows: parsedRows,
+  }
+}
+
+// 解析量表题
+const parseScaleQuestion = (questionElement: Element) => {
+  const scaleOptions: ScaleOption[] = []
+  const allLiElements = questionElement.querySelectorAll('.div_table_radio_question li')
+  const liElements = Array.from(allLiElements)
+
+  // 获取最小值和最大值标签
+  const minLabel = liElements[0].querySelector('b')?.textContent?.trim() || ''
+  const maxLabel = liElements[liElements.length - 1].querySelector('b')?.textContent?.trim() || ''
+
+  // 找到最后一个被选中的选项的索引
+  const lastSelectedIndex = liElements.slice(1, -1).findLastIndex(li => Array.from(li.classList).some(className => className.includes('on')))
+
+  // 解析中间的选项
+  liElements.slice(1, -1).forEach((li, index) => {
+    const value = parseInt(li.getAttribute('value') || '0', 10)
+    const label = li.getAttribute('title') || `${index + 1}`
+    const isSelected = index === lastSelectedIndex
+    scaleOptions.push({ value, label, isSelected })
+  })
+
+  return {
+    scaleOptions,
+    minLabel,
+    maxLabel,
   }
 }
 

@@ -1,4 +1,4 @@
-export type QuestionType = 'radio' | 'checkbox' | 'matrix' | 'matrix-multiple' | 'textarea' | 'select' | 'unknown'
+export type QuestionType = 'radio' | 'checkbox' | 'matrix' | 'matrix-multiple' | 'textarea' | 'select' | 'unknown' | 'scale'
 
 export interface Option {
   text: string
@@ -12,6 +12,12 @@ export interface MatrixRow {
   options: Option[]
 }
 
+export interface ScaleOption {
+  value: number
+  label: string
+  isSelected: boolean
+}
+
 export interface Question {
   index: number
   title: string
@@ -22,6 +28,9 @@ export interface Question {
   textareaValue?: string
   textareaId?: string
   unknownContent?: string
-  selectOptions?: Option[] // 用于下拉选择题
-  selectedValue?: string // 用于存储选中的值
+  selectOptions?: Option[]
+  selectedValue?: string
+  scaleOptions?: ScaleOption[]
+  minLabel?: string
+  maxLabel?: string
 }

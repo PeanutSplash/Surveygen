@@ -99,6 +99,25 @@
         </div>
       </div>
     </div>
+    <div v-else-if="question.type === 'scale'" class="mt-4">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-sm text-gray-600">{{ question.minLabel }}</span>
+        <span class="text-sm text-gray-600">{{ question.maxLabel }}</span>
+      </div>
+      <div class="flex justify-between">
+        <button
+          v-for="option in question.scaleOptions"
+          :key="option.value"
+          @click="handleScaleOptionClick(option)"
+          :class="[
+            'h-8 w-8 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none',
+            isOptionSelected(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+          ]"
+        >
+          {{ option.value }}
+        </button>
+      </div>
+    </div>
     <div v-else class="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
       <p class="mb-2 font-medium text-yellow-700">未知题型</p>
       <p class="text-sm text-yellow-600">这是一个未识别的问题类型。我们正在努力支持更多的问题类型。</p>
@@ -112,7 +131,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import { Question, MatrixRow, Option } from '../types/survey'
+import { Question, MatrixRow, Option, ScaleOption } from '../types/survey'
 import { useSurveyStore } from '../stores/surveyStore'
 import eventBus from '../utils/eventBus'
 
@@ -131,6 +150,14 @@ const selectedValue = computed({
   set: value => {
     handleSelectChange(value)
   },
+})
+
+// 添加一个响应式引用来跟踪当前选中的值
+const selectedScaleValue = ref(0)
+
+// 使用计算属性来确定每个选项是否应该被选中
+const isOptionSelected = computed(() => (option: ScaleOption) => {
+  return option.value <= selectedScaleValue.value
 })
 
 const updateProbability = (index: number) => {
@@ -243,6 +270,28 @@ const updateSelectProbability = (updatedOption: Option) => {
   }
 }
 
+const handleScaleOptionClick = (clickedOption: ScaleOption) => {
+  if (props.question.type === 'scale' && props.question.scaleOptions) {
+    selectedScaleValue.value = clickedOption.value
+    props.question.scaleOptions.forEach(option => {
+      option.isSelected = option.value === clickedOption.value
+    })
+    surveyStore.updateQuestionScaleOptions(props.question.index, props.question.scaleOptions)
+  }
+}
+
+// 初始化选中值
+// 在组件挂载时或 props 变化时调用此函数
+const initializeSelectedValue = () => {
+  if (props.question.type === 'scale' && props.question.scaleOptions) {
+    const maxSelectedOption = props.question.scaleOptions.reduce((max, option) => (option.isSelected && option.value > max ? option.value : max), 0)
+    selectedScaleValue.value = maxSelectedOption
+  }
+}
+
+// 监听 props.question 的变化
+watch(() => props.question, initializeSelectedValue, { immediate: true })
+
 onMounted(() => {
   if (props.question.type === 'textarea' && props.question.textareaId) {
     const textarea = document.getElementById(props.question.textareaId)
@@ -312,6 +361,8 @@ const getQuestionTypeLabel = (type: string): string => {
       return '文本题'
     case 'select':
       return '下拉选择题'
+    case 'scale':
+      return '量表题'
     default:
       return '未知题型'
   }
@@ -331,6 +382,8 @@ const getQuestionTypeClass = (type: string): string => {
       return 'bg-yellow-50 text-yellow-600 border border-yellow-200'
     case 'select':
       return 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+    case 'scale':
+      return 'bg-orange-50 text-orange-600 border border-orange-200'
     default:
       return 'bg-gray-50 text-gray-600 border border-gray-200'
   }
