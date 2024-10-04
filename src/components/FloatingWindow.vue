@@ -407,16 +407,17 @@ function handleAlertBox() {
 const isAutoAnswerEnabled = ref(false)
 
 const toggleAutoAnswer = async () => {
-  const { hasUnanswered, unansweredQuestions } = surveyStore.hasUnansweredQuestions()
-  if (hasUnanswered) {
-    eventBus.emit('showToast', { message: `请先完成所有问题的回答。未完成的题号: ${unansweredQuestions.join(', ')}`, type: 'warning' })
-    return
-  }
-
   isAutoAnswerEnabled.value = !isAutoAnswerEnabled.value
   localStorage.setItem('autoAnswerEnabled', JSON.stringify(isAutoAnswerEnabled.value))
 
   if (isAutoAnswerEnabled.value) {
+    const { hasUnanswered, unansweredQuestions } = surveyStore.hasUnansweredQuestions()
+    if (hasUnanswered) {
+      eventBus.emit('showToast', { message: `请先完成所有问题的回答。未完成的题号: ${unansweredQuestions.join(', ')}`, type: 'warning' })
+      isAutoAnswerEnabled.value = false
+      localStorage.setItem('autoAnswerEnabled', 'false')
+      return
+    }
     await fillSurveyAnswers()
   }
 }
