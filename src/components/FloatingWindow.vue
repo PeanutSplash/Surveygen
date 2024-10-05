@@ -273,17 +273,20 @@ const fillSurveyAnswers = async () => {
 // 处理单选题和多选题
 const handleOptionsQuestion = (questionElement: Element, question: Question) => {
   question.options?.forEach(option => {
-    if (option.isSelected) {
-      const input = questionElement.querySelector(`input[value="${option.value}"]`) as HTMLInputElement
+    if (!option.isSelected) return
+
+    const li = questionElement.querySelector(`li:has(input[value="${option.value}"])`) as HTMLLIElement
+    if (!li) return
+
+    const a = li.querySelector('a.jqCheckbox, a.jqRadio') as HTMLAnchorElement
+    a?.click()
+
+    if (option.hasInput && option.inputValue) {
+      const input = li.querySelector('input.underline') as HTMLInputElement
       if (input) {
-        simulateHumanClick(input)
-      }
-      if (option.hasInput && option.inputValue) {
-        const textInput = questionElement.querySelector(`input[type="text"][rel="${option.value}"]`) as HTMLInputElement
-        if (textInput) {
-          textInput.value = option.inputValue
-          textInput.dispatchEvent(new Event('input', { bubbles: true }))
-        }
+        input.value = option.inputValue
+        input.style.display = 'inline-block'
+        input.dispatchEvent(new Event('input', { bubbles: true }))
       }
     }
   })
