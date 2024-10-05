@@ -28,6 +28,7 @@ export interface Question {
   rows?: MatrixRow[]
   headers?: string[]
   textareaValue?: string
+  textareaInputs?: { value: string }[]
   textareaId?: string
   unknownContent?: string
   selectOptions?: Option[]

@@ -161,9 +161,11 @@ const parseMatrixCheckboxQuestion = (questionElement: Element) => {
 // 解析文本区域题
 const parseTextAreaQuestion = (questionElement: Element) => {
   const textarea = questionElement.querySelector('textarea') as HTMLTextAreaElement
+  const textareaValue = textarea?.value || ''
   return {
-    textareaValue: textarea?.value || '',
+    textareaValue,
     textareaId: textarea?.id || '',
+    textareaInputs: [{ value: textareaValue }],
   }
 }
 

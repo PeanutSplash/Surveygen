@@ -281,15 +281,15 @@ const handleOptionsQuestion = (questionElement: Element, question: Question) => 
     const a = li.querySelector('a.jqCheckbox, a.jqRadio') as HTMLAnchorElement
     a?.click()
 
-    if (option.hasInput && option.inputs) {
-      option.inputs.forEach((inputValue, index) => {
-        const input = li.querySelector(`input.underline:nth-of-type(${index + 1})`) as HTMLInputElement
-        if (input) {
-          input.value = inputValue.value
-          input.style.display = 'inline-block'
-          input.dispatchEvent(new Event('input', { bubbles: true }))
-        }
-      })
+    if (option.hasInput && option.inputs && option.inputs.length > 0) {
+      console.log(JSON.parse(JSON.stringify(option)))
+      const inputValue = option.inputs[0].value
+      const input = li.querySelector('input.underline') as HTMLInputElement
+      if (input) {
+        input.value = inputValue
+        input.style.display = 'inline-block'
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+      }
     }
   })
 }
@@ -325,7 +325,14 @@ const handleMatrixQuestion = (questionElement: Element, question: Question) => {
 const handleTextareaQuestion = (question: Question) => {
   const textareaElement = document.getElementById(question.textareaId!) as HTMLTextAreaElement
   if (textareaElement) {
-    textareaElement.value = question.textareaValue || ''
+    if (surveyStore.isAdvancedMode && question.textareaInputs) {
+      textareaElement.value = question.textareaInputs.map(input => input.value).join('\n')
+    } else {
+      textareaElement.value = question.textareaValue || ''
+    }
+    // 触发 input 事件以确保任何相关的事件监听器都能被触发
+    const event = new Event('input', { bubbles: true })
+    textareaElement.dispatchEvent(event)
   }
 }
 

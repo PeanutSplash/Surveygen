@@ -140,7 +140,56 @@
 
     <!-- 文本题 -->
     <div v-else-if="question.type === 'textarea'" class="mt-4">
-      <textarea class="w-full rounded-md border border-gray-300 p-2" v-model="textareaValue" @input="updateTextareaValue"></textarea>
+      <template v-if="surveyStore.isAdvancedMode">
+        <template v-if="question.textareaInputs?.length === 1 || !surveyStore.isAdvancedMode">
+          <input
+            :id="`textarea-input-0`"
+            v-model="question.textareaInputs[0].value"
+            type="text"
+            class="block w-full rounded-md border border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            @input="updateTextareaValue(0)"
+          />
+        </template>
+        <template v-else>
+          <div class="isolate -space-y-px rounded-md shadow-sm">
+            <div
+              v-for="(input, index) in question.textareaInputs"
+              :key="index"
+              :class="[
+                'relative bg-white px-3 pb-1.5 pt-2.5 ring-1 ring-inset ring-gray-300',
+                index === 0 ? 'rounded-t-md' : '',
+                index === (question.textareaInputs?.length ?? 0) - 1 ? 'rounded-b-md' : '',
+              ]"
+            >
+              <label :for="`textarea-input-${index}`" class="block text-xs font-medium text-gray-900">答案 {{ index + 1 }}</label>
+              <input
+                :id="`textarea-input-${index}`"
+                v-model="input.value"
+                type="text"
+                class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                @input="updateTextareaValue(index)"
+              />
+            </div>
+          </div>
+        </template>
+        <div class="mt-2 flex justify-between">
+          <button @click="addTextareaInput" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">添加答案</button>
+          <button
+            v-if="question.textareaInputs && question.textareaInputs.length > 1"
+            @click="removeTextareaInput(question.textareaInputs.length - 1)"
+            class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
+          >
+            删除
+          </button>
+        </div>
+      </template>
+      <input
+        v-else
+        v-model="question.textareaValue"
+        type="text"
+        class="w-full rounded-md border border-gray-300 p-2"
+        @input="(e: Event) => updateTextareaValue(+(e.target as HTMLInputElement).value)"
+      />
     </div>
 
     <!-- 下拉选择题 -->
@@ -203,9 +252,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import { Question, MatrixRow, Option, ScaleOption } from '../types/survey'
+import type { Question, MatrixRow, Option, ScaleOption } from '../types/survey'
 import { useSurveyStore } from '../stores/surveyStore'
-import eventBus from '../utils/eventBus'
 
 const props = defineProps<{
   question: Question
@@ -216,23 +264,19 @@ const surveyStore = useSurveyStore()
 const questionRef = ref<HTMLElement | null>(null)
 const textareaValue = ref(props.question.textareaValue || '')
 
-// 添加这个计算属性
 const selectedValue = computed({
   get: () => props.question.selectedValue || '',
-  set: value => {
+  set: (value: string) => {
     handleSelectChange(value)
   },
 })
 
-// 添加一个响应式引用来跟踪当前选中的值
 const selectedScaleValue = ref(0)
 
-// 使用计算属性来确定每个选项是否应该被选中
 const isOptionSelected = computed(() => (option: ScaleOption) => {
   return option.value <= selectedScaleValue.value
 })
 
-// 添加一个计算属性来检查是否有带输入框的选项
 const hasInputOptions = computed(() => {
   return props.question.options?.some(option => option.hasInput) || false
 })
@@ -246,7 +290,7 @@ const updateProbability = (index: number) => {
       probability = 0
     }
 
-    // 确保概率在0到100之间
+    // 确保概率0到100之间
     probability = Math.max(0, Math.min(100, probability))
 
     props.question.options[index].probability = probability
@@ -279,8 +323,14 @@ const updateProbability = (index: number) => {
 
 let observer: MutationObserver | null = null
 
-const updateTextareaValue = () => {
-  surveyStore.updateQuestionTextarea(props.question.index, textareaValue.value)
+const updateTextareaValue = (index?: number) => {
+  if (props.question.textareaInputs) {
+    const newValue = props.question.textareaInputs.map(input => input.value).join(', ')
+    surveyStore.updateQuestionTextarea(props.question.index, newValue)
+  } else if (typeof index === 'undefined') {
+    // 处理单个文本框的情况
+    surveyStore.updateQuestionTextarea(props.question.index, textareaValue.value)
+  }
 }
 
 const handleOptionClick = (optionText: string) => {
@@ -387,13 +437,14 @@ onMounted(() => {
   if (props.question.type === 'textarea' && props.question.textareaId) {
     const textarea = document.getElementById(props.question.textareaId)
     if (textarea) {
-      observer = new MutationObserver(updateTextareaValue)
+      observer = new MutationObserver(() => updateTextareaValue())
       observer.observe(textarea, { attributes: true, childList: true, characterData: true, subtree: true })
 
       // 添加输入事件监听器
-      textarea.addEventListener('input', updateTextareaValue)
+      textarea.addEventListener('input', () => updateTextareaValue())
     }
   }
+  initializeSelectedValue()
 })
 
 onUnmounted(() => {
@@ -403,7 +454,7 @@ onUnmounted(() => {
   if (props.question.type === 'textarea' && props.question.textareaId) {
     const textarea = document.getElementById(props.question.textareaId)
     if (textarea) {
-      textarea.removeEventListener('input', updateTextareaValue)
+      textarea.removeEventListener('input', () => updateTextareaValue())
     }
   }
 })
@@ -502,6 +553,21 @@ const removeInput = (option: Option) => {
   if ((option.inputs?.length ?? 0) > 1) {
     option.inputs?.pop()
     surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
+  }
+}
+
+const addTextareaInput = () => {
+  if (!props.question.textareaInputs) {
+    props.question.textareaInputs = []
+  }
+  props.question.textareaInputs.push({ value: '' })
+  surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
+}
+
+const removeTextareaInput = (index: number) => {
+  if (props.question.textareaInputs && props.question.textareaInputs.length > 1) {
+    props.question.textareaInputs.splice(index, 1)
+    surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
   }
 }
 

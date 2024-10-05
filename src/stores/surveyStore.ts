@@ -183,6 +183,15 @@ export const useSurveyStore = defineStore('survey', () => {
     }
   }
 
+  const updateQuestionTextareaInputs = (questionIndex: number, inputs: { value: string }[]) => {
+    const questionToUpdate = questions.value.find((q: Question) => q.index === questionIndex)
+    if (questionToUpdate && questionToUpdate.type === 'textarea') {
+      questionToUpdate.textareaInputs = inputs
+      questionToUpdate.textareaValue = inputs.map(input => input.value).join('\n')
+      saveData() // 更新后保存数据
+    }
+  }
+
   return {
     questions,
     isVisible,
@@ -204,5 +213,6 @@ export const useSurveyStore = defineStore('survey', () => {
     updateQuestionMatrix,
     updateQuestionSelectOptions,
     updateQuestionScaleOptions,
+    updateQuestionTextareaInputs,
   }
 })
