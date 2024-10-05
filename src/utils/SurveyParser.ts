@@ -96,14 +96,17 @@ const parseRadioQuestion = (questionElement: Element) => {
 const parseCheckboxQuestion = (questionElement: Element) => {
   const options = questionElement.querySelectorAll('.ulradiocheck li')
   const parsedOptions = Array.from(options).map(option => {
-    const input = option.querySelector('input')
+    const input = option.querySelector('input[type="checkbox"]') as HTMLInputElement | null
     const label = option.querySelector('label')
     const isChecked = option.querySelector('.jqCheckbox.jqChecked') !== null
+    const textInput = option.querySelector('input[type="text"]') as HTMLInputElement | null
     return {
       value: input?.value || '',
-      text: label?.textContent || '',
+      text: label?.textContent?.trim() || '',
       isSelected: isChecked,
-      probability: 0, // 初始化为0，稍后会更新
+      probability: 0, // 初始化为0
+      hasInput: !!textInput,
+      inputValue: textInput ? textInput.value : undefined,
     }
   })
 
