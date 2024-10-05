@@ -73,18 +73,17 @@ const parseRadioQuestion = (questionElement: Element) => {
     const input = option.querySelector('input[type="radio"]') as HTMLInputElement | null
     const label = option.querySelector('label')
     const isChecked = option.querySelector('.jqRadio.jqChecked') !== null
-    const textInput = option.querySelector('input[type="text"]') as HTMLInputElement | null
+    const textInputs = option.querySelectorAll('input[type="text"]') as NodeListOf<HTMLInputElement>
     return {
       value: input?.value || '',
       text: label?.textContent?.trim() || '',
       isSelected: isChecked,
       probability: 0,
-      hasInput: !!textInput,
-      inputValue: textInput ? textInput.value : undefined,
+      hasInput: textInputs.length > 0,
+      inputs: Array.from(textInputs).map(textInput => ({ value: textInput.value })),
     }
   })
 
-  // 更新概率
   updateOptionProbabilities(parsedOptions)
 
   return {
@@ -99,18 +98,17 @@ const parseCheckboxQuestion = (questionElement: Element) => {
     const input = option.querySelector('input[type="checkbox"]') as HTMLInputElement | null
     const label = option.querySelector('label')
     const isChecked = option.querySelector('.jqCheckbox.jqChecked') !== null
-    const textInput = option.querySelector('input[type="text"]') as HTMLInputElement | null
+    const textInputs = option.querySelectorAll('input[type="text"]') as NodeListOf<HTMLInputElement>
     return {
       value: input?.value || '',
       text: label?.textContent?.trim() || '',
       isSelected: isChecked,
-      probability: 0, // 初始化为0
-      hasInput: !!textInput,
-      inputValue: textInput ? textInput.value : undefined,
+      probability: 0,
+      hasInput: textInputs.length > 0,
+      inputs: Array.from(textInputs).map(textInput => ({ value: textInput.value })),
     }
   })
 
-  // 更新概率
   updateOptionProbabilities(parsedOptions)
 
   return {
@@ -184,7 +182,7 @@ const parseMatrixQuestion = (questionElement: Element) => {
       const isChecked = td.querySelector('.jqRadio.jqChecked') !== null
       return {
         value: input?.value || '',
-        text: input?.value || '', // 添加 text 属性
+        text: input?.value || '',
         isSelected: isChecked,
         probability: isChecked ? 80 : 0, // 设置选中选项的概率为80%
       }

@@ -20,7 +20,7 @@
     <!-- 单选题和多选题 -->
     <div
       v-if="question.type === 'radio' || question.type === 'checkbox'"
-      class="mt-4 space-y-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0 md:grid-cols-3 lg:grid-cols-4"
+      :class="['mt-4', hasInputOptions ? 'space-y-4' : 'space-y-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0 md:grid-cols-3 lg:grid-cols-4']"
     >
       <div
         v-for="(option, index) in question.options"
@@ -36,14 +36,53 @@
         <span :class="{ 'font-medium text-indigo-700': option.isSelected, 'text-gray-700': !option.isSelected }">
           {{ option.text }}
         </span>
-        <input
-          v-if="option.hasInput"
-          type="text"
-          v-model="option.inputValue"
-          class="mt-2 w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
-          @click.stop
-          @input="updateOptionInput(index, $event)"
-        />
+        <div v-if="option.hasInput && option.isSelected" class="mt-2">
+          <template v-if="option.inputs?.length === 1">
+            <input
+              :id="`input-${index}-0`"
+              v-model="option.inputs[0].value"
+              type="text"
+              class="block w-full rounded-md border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              @click.stop
+              @input="updateOptionInput(index, 0, $event)"
+            />
+          </template>
+          <template v-else>
+            <div class="isolate -space-y-px rounded-md shadow-sm">
+              <div
+                v-for="(input, inputIndex) in option.inputs"
+                :key="inputIndex"
+                :class="[
+                  'relative bg-white px-3 pb-1.5 pt-2.5 ring-1 ring-inset ring-gray-300',
+                  inputIndex === 0 ? 'rounded-t-md' : '',
+                  inputIndex === (option.inputs?.length ?? 0) - 1 ? 'rounded-b-md' : '',
+                ]"
+              >
+                <label :for="`input-${index}-${inputIndex}`" class="block text-xs font-medium text-gray-900"> 答案 {{ inputIndex + 1 }} </label>
+                <input
+                  :id="`input-${index}-${inputIndex}`"
+                  v-model="input.value"
+                  type="text"
+                  class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  @click.stop
+                  @input="updateOptionInput(index, inputIndex, $event)"
+                />
+              </div>
+            </div>
+          </template>
+          <div class="mt-2 flex justify-between">
+            <button @click.stop="addInput(option)" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">
+              添加答案
+            </button>
+            <button
+              v-if="(option.inputs?.length ?? 0) > 1"
+              @click.stop="removeInput(option)"
+              class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
+            >
+              删除
+            </button>
+          </div>
+        </div>
         <!-- 高级模式：概率设置 -->
         <div v-if="surveyStore.isAdvancedMode" class="mt-2">
           <label class="text-xs text-gray-500">概率：</label>
@@ -193,6 +232,11 @@ const isOptionSelected = computed(() => (option: ScaleOption) => {
   return option.value <= selectedScaleValue.value
 })
 
+// 添加一个计算属性来检查是否有带输入框的选项
+const hasInputOptions = computed(() => {
+  return props.question.options?.some(option => option.hasInput) || false
+})
+
 const updateProbability = (index: number) => {
   if (props.question.options) {
     let probability = Number(props.question.options[index].probability)
@@ -244,8 +288,12 @@ const handleOptionClick = (optionText: string) => {
     // 单选逻辑
     props.question.options?.forEach(option => {
       option.isSelected = option.text === optionText
-      if (!option.isSelected) {
-        option.inputValue = '' // 清空未选中选项的输入值
+      if (option.hasInput) {
+        if (!option.isSelected) {
+          option.inputs = [{ value: '' }] // 重置未选中选项的输入值
+        } else if (!option.inputs || option.inputs.length === 0) {
+          option.inputs = [{ value: '' }] // 为新选中的选项初始化输入数组
+        }
       }
     })
   } else if (props.question.type === 'checkbox') {
@@ -253,8 +301,12 @@ const handleOptionClick = (optionText: string) => {
     const option = props.question.options?.find(o => o.text === optionText)
     if (option) {
       option.isSelected = !option.isSelected
-      if (!option.isSelected) {
-        option.inputValue = '' // 清空未选中选项的输入值
+      if (option.hasInput) {
+        if (!option.isSelected) {
+          option.inputs = [{ value: '' }] // 重置未选中选项的输入值
+        } else if (!option.inputs || option.inputs.length === 0) {
+          option.inputs = [{ value: '' }] // 为新选中的选项初始化输入数组
+        }
       }
     }
   }
@@ -428,11 +480,27 @@ const getQuestionTypeClass = (type: string): string => {
   }
 }
 
-const updateOptionInput = (index: number, event: Event) => {
+const updateOptionInput = (optionIndex: number, inputIndex: number, event: Event) => {
   const inputValue = (event.target as HTMLInputElement).value
   if (props.question.options) {
-    props.question.options[index].inputValue = inputValue
+    // @ts-ignore
+    props.question.options[optionIndex].inputs[inputIndex].value = inputValue
     surveyStore.updateQuestionOptions(props.question.index, props.question.options)
+  }
+}
+
+const addInput = (option: Option) => {
+  if (!option.inputs) {
+    option.inputs = []
+  }
+  option.inputs.push({ value: '' })
+  surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
+}
+
+const removeInput = (option: Option) => {
+  if ((option.inputs?.length ?? 0) > 1) {
+    option.inputs?.pop()
+    surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
   }
 }
 

@@ -281,13 +281,15 @@ const handleOptionsQuestion = (questionElement: Element, question: Question) => 
     const a = li.querySelector('a.jqCheckbox, a.jqRadio') as HTMLAnchorElement
     a?.click()
 
-    if (option.hasInput && option.inputValue) {
-      const input = li.querySelector('input.underline') as HTMLInputElement
-      if (input) {
-        input.value = option.inputValue
-        input.style.display = 'inline-block'
-        input.dispatchEvent(new Event('input', { bubbles: true }))
-      }
+    if (option.hasInput && option.inputs) {
+      option.inputs.forEach((inputValue, index) => {
+        const input = li.querySelector(`input.underline:nth-of-type(${index + 1})`) as HTMLInputElement
+        if (input) {
+          input.value = inputValue.value
+          input.style.display = 'inline-block'
+          input.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+      })
     }
   })
 }
