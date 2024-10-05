@@ -1,5 +1,6 @@
 <template>
   <div ref="questionRef" class="question mx-auto mb-6 max-w-6xl rounded-lg bg-[#fefefe] p-6 text-left transition-all duration-300 ease-in-out hover:shadow-lg">
+    <!-- 问题标题和类型 -->
     <div class="mb-4 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <h3 class="text-sm font-medium text-gray-700">{{ question.index }}. {{ question.title }}</h3>
@@ -15,10 +16,13 @@
         随机本题
       </button>
     </div>
+
+    <!-- 单选题和多选题 -->
     <div
       v-if="question.type === 'radio' || question.type === 'checkbox'"
       class="mt-4 space-y-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0 md:grid-cols-3 lg:grid-cols-4"
     >
+      <!-- 选项 -->
       <div
         v-for="(option, index) in question.options"
         :key="option.value"
@@ -33,6 +37,7 @@
         <span :class="{ 'font-medium text-indigo-700': option.isSelected, 'text-gray-700': !option.isSelected }">
           {{ option.text }}
         </span>
+        <!-- 高级模式：概率设置 -->
         <div v-if="surveyStore.isAdvancedMode" class="mt-2">
           <label class="text-xs text-gray-500">概率：</label>
           <input
@@ -48,8 +53,11 @@
         </div>
       </div>
     </div>
+
+    <!-- 矩阵题和矩阵多选题 -->
     <div v-else-if="question.type === 'matrix' || question.type === 'matrix-multiple'" class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200 text-xs">
+        <!-- 表头 -->
         <thead class="bg-gray-50">
           <tr>
             <th class="w-1/4 px-4 py-2 text-xs font-medium uppercase tracking-wider text-gray-500"></th>
@@ -58,6 +66,7 @@
             </th>
           </tr>
         </thead>
+        <!-- 表体 -->
         <tbody class="divide-y divide-gray-200 bg-[#fefefe]">
           <tr v-for="row in question.rows" :key="row.title">
             <td class="w-1/4 whitespace-nowrap px-4 py-2 font-medium text-gray-900">{{ row.title }}</td>
@@ -74,15 +83,20 @@
         </tbody>
       </table>
     </div>
+
+    <!-- 文本题 -->
     <div v-else-if="question.type === 'textarea'" class="mt-4">
       <textarea class="w-full rounded-md border border-gray-300 p-2" v-model="textareaValue" @input="updateTextareaValue"></textarea>
     </div>
+
+    <!-- 下拉选择题 -->
     <div v-else-if="question.type === 'select'" class="mt-4">
       <select v-model="selectedValue" class="w-full rounded-md border border-gray-300 p-2">
         <option v-for="option in question.selectOptions" :key="option.value" :value="option.value">
           {{ option.text }}
         </option>
       </select>
+      <!-- 高级模式：概率设置 -->
       <div v-if="surveyStore.isAdvancedMode" class="mt-2">
         <div v-for="option in question.selectOptions" :key="option.value" class="flex items-center space-x-2">
           <span>{{ option.text }}:</span>
@@ -99,6 +113,8 @@
         </div>
       </div>
     </div>
+
+    <!-- 量表题 -->
     <div v-else-if="question.type === 'scale'" class="mt-4">
       <div class="mb-2 flex items-center justify-between">
         <span class="text-sm text-gray-600">{{ question.minLabel }}</span>
@@ -118,6 +134,8 @@
         </button>
       </div>
     </div>
+
+    <!-- 未知题型 -->
     <div v-else class="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
       <p class="mb-2 font-medium text-yellow-700">未知题型</p>
       <p class="text-sm text-yellow-600">这是一个未识别的问题类型。我们正在努力支持更多的问题类型。</p>
