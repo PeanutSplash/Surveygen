@@ -37,7 +37,7 @@
           {{ option.text }}
         </span>
         <div v-if="option.hasInput && option.isSelected" class="mt-2">
-          <template v-if="option.inputs?.length === 1">
+          <template v-if="option.inputs?.length === 1 || !surveyStore.isAdvancedMode">
             <input
               :id="`input-${index}-0`"
               v-model="option.inputs[0].value"
@@ -70,7 +70,7 @@
               </div>
             </div>
           </template>
-          <div class="mt-2 flex justify-between">
+          <div v-if="surveyStore.isAdvancedMode" class="mt-2 flex justify-between">
             <button @click.stop="addInput(option)" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">
               添加答案
             </button>
@@ -490,6 +490,7 @@ const updateOptionInput = (optionIndex: number, inputIndex: number, event: Event
 }
 
 const addInput = (option: Option) => {
+  if (!surveyStore.isAdvancedMode) return // 在普通模式下禁止添加输入框
   if (!option.inputs) {
     option.inputs = []
   }
