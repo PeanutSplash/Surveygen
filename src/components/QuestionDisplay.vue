@@ -73,10 +73,18 @@
             <td
               v-for="(option, index) in row.options"
               :key="index"
-              :class="['cursor-pointer whitespace-nowrap px-4 py-2 text-center', option.isSelected ? 'bg-blue-100 font-medium text-blue-700' : 'text-gray-500']"
+              class="cursor-pointer whitespace-nowrap px-4 py-2 text-center"
               @click="handleMatrixOptionClick(row, option)"
             >
-              {{ option.value }}
+              <div class="flex items-center justify-center">
+                <input
+                  :type="question.type === 'matrix' ? 'radio' : 'checkbox'"
+                  :name="row.title"
+                  :checked="option.isSelected"
+                  :class="['h-4 w-4', question.type !== 'matrix' ? 'rounded' : '']"
+                  @click.stop
+                />
+              </div>
               <div v-if="surveyStore.isAdvancedMode" class="mt-1 text-xs text-gray-400">{{ option.probability.toFixed(0) }}%</div>
             </td>
           </tr>
@@ -299,7 +307,7 @@ const handleScaleOptionClick = (clickedOption: ScaleOption) => {
 }
 
 // 初始化选中值
-// 在组件挂载时或 props 变化时调用此函数
+// 在件挂载时或 props 变化时调用此函数
 const initializeSelectedValue = () => {
   if (props.question.type === 'scale' && props.question.scaleOptions) {
     const maxSelectedOption = props.question.scaleOptions.reduce((max, option) => (option.isSelected && option.value > max ? option.value : max), 0)
