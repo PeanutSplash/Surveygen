@@ -8,6 +8,7 @@ export const useSurveyStore = defineStore('survey', () => {
   const isVisible = ref(true)
   const isAdvancedMode = ref(false)
   const submissionCount = ref(0)
+  const isAutoAnswerEnabled = ref(false)
 
   // 获取问卷ID
   const getSurveyId = () => {
@@ -192,6 +193,18 @@ export const useSurveyStore = defineStore('survey', () => {
     }
   }
 
+  const loadAutoAnswerEnabled = () => {
+    const storedAutoAnswerEnabled = localStorage.getItem('autoAnswerEnabled')
+    if (storedAutoAnswerEnabled !== null) {
+      isAutoAnswerEnabled.value = JSON.parse(storedAutoAnswerEnabled)
+    }
+  }
+
+  const setAutoAnswerEnabled = (value: boolean) => {
+    isAutoAnswerEnabled.value = value
+    localStorage.setItem('autoAnswerEnabled', JSON.stringify(value))
+  }
+
   return {
     questions,
     isVisible,
@@ -214,5 +227,8 @@ export const useSurveyStore = defineStore('survey', () => {
     updateQuestionSelectOptions,
     updateQuestionScaleOptions,
     updateQuestionTextareaInputs,
+    isAutoAnswerEnabled,
+    loadAutoAnswerEnabled,
+    setAutoAnswerEnabled,
   }
 })

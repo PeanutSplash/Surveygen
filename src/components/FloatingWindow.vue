@@ -12,7 +12,12 @@
       class="!pointer-events-auto rounded-lg shadow-lg"
     >
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-[#fafafa]">
-        <FloatingWindowHeader :version="version" :submission-count="surveyStore.submissionCount" @toggle-settings="toggleSettings" />
+        <FloatingWindowHeader
+          :version="version"
+          :submission-count="surveyStore.submissionCount"
+          @toggle-settings="toggleSettings"
+          @stop-auto-answer="stopAutoAnswer"
+        />
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
           <div v-if="surveyStore.questions.length === 0" class="flex h-full flex-col items-center justify-center">
             <div class="h-16 w-16 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
@@ -434,6 +439,8 @@ const toggleAutoAnswer = async () => {
       localStorage.setItem('autoAnswerEnabled', 'false')
       return
     }
+    // 刷新页面
+    window.location.reload()
     await fillSurveyAnswers()
   }
 }
@@ -453,6 +460,11 @@ const resetSurvey = () => {
 
   // 关闭设置面板
   isSettingsVisible.value = false
+}
+
+const stopAutoAnswer = () => {
+  surveyStore.setAutoAnswerEnabled(false)
+  eventBus.emit('showToast', { message: '自动提交已停止', type: 'info' })
 }
 
 onMounted(() => {
@@ -514,6 +526,8 @@ onMounted(() => {
 
   // 加载提交次数
   surveyStore.loadSubmissionCount()
+
+  surveyStore.loadAutoAnswerEnabled()
 })
 
 onUnmounted(() => {
