@@ -22,7 +22,6 @@
       v-if="question.type === 'radio' || question.type === 'checkbox'"
       class="mt-4 space-y-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0 md:grid-cols-3 lg:grid-cols-4"
     >
-      <!-- 选项 -->
       <div
         v-for="(option, index) in question.options"
         :key="option.value"
@@ -37,6 +36,14 @@
         <span :class="{ 'font-medium text-indigo-700': option.isSelected, 'text-gray-700': !option.isSelected }">
           {{ option.text }}
         </span>
+        <input
+          v-if="option.hasInput"
+          type="text"
+          v-model="option.inputValue"
+          class="mt-2 w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+          @click.stop
+          @input="updateOptionInput(index, $event)"
+        />
         <!-- 高级模式：概率设置 -->
         <div v-if="surveyStore.isAdvancedMode" class="mt-2">
           <label class="text-xs text-gray-500">概率：</label>
@@ -237,12 +244,18 @@ const handleOptionClick = (optionText: string) => {
     // 单选逻辑
     props.question.options?.forEach(option => {
       option.isSelected = option.text === optionText
+      if (!option.isSelected) {
+        option.inputValue = '' // 清空未选中选项的输入值
+      }
     })
   } else if (props.question.type === 'checkbox') {
     // 多选题逻辑
     const option = props.question.options?.find(o => o.text === optionText)
     if (option) {
       option.isSelected = !option.isSelected
+      if (!option.isSelected) {
+        option.inputValue = '' // 清空未选中选项的输入值
+      }
     }
   }
 
@@ -412,6 +425,14 @@ const getQuestionTypeClass = (type: string): string => {
       return 'bg-orange-50 text-orange-600 border border-orange-200'
     default:
       return 'bg-gray-50 text-gray-600 border border-gray-200'
+  }
+}
+
+const updateOptionInput = (index: number, event: Event) => {
+  const inputValue = (event.target as HTMLInputElement).value
+  if (props.question.options) {
+    props.question.options[index].inputValue = inputValue
+    surveyStore.updateQuestionOptions(props.question.index, props.question.options)
   }
 }
 

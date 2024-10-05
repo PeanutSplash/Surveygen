@@ -271,18 +271,22 @@ const fillSurveyAnswers = async () => {
 }
 
 // 处理单选题和多选题
-const handleOptionsQuestion = async (questionElement: Element, question: Question) => {
-  const isMultipleChoice = question.type === 'checkbox'
-  const options = question.options!
-
-  for (const option of options) {
-    if (option.isSelected || (isMultipleChoice && Math.random() < option.probability / 100)) {
-      const aElement = questionElement.querySelector(`a[rel="q${question.index}_${option.value}"]`) as HTMLAnchorElement
-      if (aElement) {
-        simulateHumanClick(aElement)
+const handleOptionsQuestion = (questionElement: Element, question: Question) => {
+  question.options?.forEach(option => {
+    if (option.isSelected) {
+      const input = questionElement.querySelector(`input[value="${option.value}"]`) as HTMLInputElement
+      if (input) {
+        simulateHumanClick(input)
+      }
+      if (option.hasInput && option.inputValue) {
+        const textInput = questionElement.querySelector(`input[type="text"][rel="${option.value}"]`) as HTMLInputElement
+        if (textInput) {
+          textInput.value = option.inputValue
+          textInput.dispatchEvent(new Event('input', { bubbles: true }))
+        }
       }
     }
-  }
+  })
 }
 
 // 处理矩阵题

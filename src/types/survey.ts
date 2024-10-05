@@ -5,6 +5,8 @@ export interface Option {
   value: string
   isSelected: boolean
   probability: number
+  hasInput?: boolean
+  inputValue?: string
 }
 
 export interface MatrixRow {
