@@ -282,43 +282,54 @@ const hasInputOptions = computed(() => {
 })
 
 const updateProbability = (index: number) => {
-  if (props.question.options) {
-    let probability = Number(props.question.options[index].probability)
+  if (!props.question.options) return
 
-    // 如果输入不是有效的数字，将其设置为0
-    if (isNaN(probability)) {
-      probability = 0
-    }
+  const options = props.question.options
+  let updatedOption = options[index]
+  updatedOption.probability = Math.max(0, Math.min(100, Math.round(Number(updatedOption.probability))))
 
-    // 确保概率0到100之间
-    probability = Math.max(0, Math.min(100, probability))
+  let totalProbability = options.reduce((sum, option) => sum + Number(option.probability), 0)
+  let diff = 100 - totalProbability
 
-    props.question.options[index].probability = probability
+  if (diff !== 0) {
+    const otherOptions = options.filter((_, i) => i !== index)
+    let attempts = 0
+    const maxAttempts = 100 // 防止无限循环
 
-    let totalProbability = props.question.options.reduce((sum, option) => sum + Number(option.probability), 0)
-
-    // 如果总和超过100，按比例减少其他选项的概率
-    if (totalProbability > 100) {
-      const excess = totalProbability - 100
-      const otherOptions = props.question.options.filter((_, i) => i !== index)
-      const otherTotalProbability = otherOptions.reduce((sum, option) => sum + Number(option.probability), 0)
-
-      otherOptions.forEach(option => {
-        if (otherTotalProbability > 0) {
-          const reduction = Math.round((Number(option.probability) / otherTotalProbability) * excess)
-          option.probability = Math.max(0, Number(option.probability) - reduction)
+    while (diff !== 0 && attempts < maxAttempts) {
+      for (let option of otherOptions) {
+        if (diff > 0 && option.probability < 100) {
+          option.probability++
+          diff--
+        } else if (diff < 0 && option.probability > 0) {
+          option.probability--
+          diff++
         }
-      })
+        if (diff === 0) break
+      }
+      attempts++
     }
 
-    // 确保所有概率都是非负整数
-    props.question.options.forEach(option => {
-      option.probability = Math.max(0, Math.round(Number(option.probability)))
-    })
-
-    surveyStore.updateQuestionOptions(props.question.index, props.question.options)
-    surveyStore.saveData() // 添加这行来保存更新后的数据
+    // 如果还有剩余差值，调整更新的选项
+    if (diff !== 0) {
+      updatedOption.probability = Math.max(0, Math.min(100, updatedOption.probability + diff))
+    }
   }
+
+  // 确保所有概率都是非负整数
+  options.forEach(option => {
+    option.probability = Math.max(0, Math.round(Number(option.probability)))
+  })
+
+  // 最后检查并调整，确保总和为100
+  totalProbability = options.reduce((sum, option) => sum + Number(option.probability), 0)
+  if (totalProbability !== 100) {
+    const lastOption = options[options.length - 1]
+    lastOption.probability += 100 - totalProbability
+  }
+
+  surveyStore.updateQuestionOptions(props.question.index, options)
+  surveyStore.saveData()
 }
 
 let observer: MutationObserver | null = null
