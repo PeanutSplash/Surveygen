@@ -542,6 +542,30 @@ onUnmounted(() => {
   border: none !important;
   background: transparent !important;
 }
+
+.handle-tm,
+.handle-bm {
+  width: 100%;
+  left: 0;
+  margin-left: 0;
+}
+
+.handle-ml,
+.handle-mr {
+  height: 100%;
+  top: 0;
+  margin-top: 0;
+}
+
+.handle-tl,
+.handle-tr,
+.handle-bl,
+.handle-br {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  z-index: 1;
+}
 .vdr {
   border: none !important;
 }
