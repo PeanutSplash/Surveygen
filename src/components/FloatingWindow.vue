@@ -528,6 +528,9 @@ onMounted(() => {
   surveyStore.loadSubmissionCount()
 
   surveyStore.loadAutoAnswerEnabled()
+
+  // 加载高级模式状态
+  surveyStore.loadAdvancedMode()
 })
 
 onUnmounted(() => {

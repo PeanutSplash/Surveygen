@@ -84,6 +84,7 @@ export const useSurveyStore = defineStore('survey', () => {
 
   const toggleMode = () => {
     isAdvancedMode.value = !isAdvancedMode.value
+    localStorage.setItem('isAdvancedMode', JSON.stringify(isAdvancedMode.value))
   }
 
   const updateQuestionOptions = (questionIndex: number, newOptions: Option[]) => {
@@ -205,6 +206,13 @@ export const useSurveyStore = defineStore('survey', () => {
     localStorage.setItem('autoAnswerEnabled', JSON.stringify(value))
   }
 
+  const loadAdvancedMode = () => {
+    const storedAdvancedMode = localStorage.getItem('isAdvancedMode')
+    if (storedAdvancedMode !== null) {
+      isAdvancedMode.value = JSON.parse(storedAdvancedMode)
+    }
+  }
+
   return {
     questions,
     isVisible,
@@ -230,5 +238,6 @@ export const useSurveyStore = defineStore('survey', () => {
     isAutoAnswerEnabled,
     loadAutoAnswerEnabled,
     setAutoAnswerEnabled,
+    loadAdvancedMode,
   }
 })
