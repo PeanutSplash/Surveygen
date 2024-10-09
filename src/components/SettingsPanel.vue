@@ -32,6 +32,24 @@
       <div class="mt-4 text-xs text-gray-500">
         <p>提示: 按下 F3 键可以快速显示/隐藏面板</p>
       </div>
+      <div class="mt-4 flex w-full items-center justify-center space-x-4">
+        <a
+          href="https://github.com/PeanutSplash/Surveygen"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="h-max w-max transform transition-all duration-300 hover:scale-110"
+        >
+          <GithubIcon class="h-7 w-7" />
+        </a>
+        <a
+          href="https://qm.qq.com/q/sdrf3ZJUvm"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="h-max w-max transform transition-all duration-300 hover:scale-110"
+        >
+          <QQIcon class="h-7 w-7" />
+        </a>
+      </div>
     </div>
   </div>
 </template>
@@ -39,6 +57,8 @@
 <script setup lang="ts">
 import { XMarkIcon } from '@heroicons/vue/24/solid'
 import ToggleSwitch from './ToggleSwitch.vue'
+import GithubIcon from '../assets/github.svg'
+import QQIcon from '../assets/qq.svg'
 
 defineProps<{
   isAdvancedMode: boolean
