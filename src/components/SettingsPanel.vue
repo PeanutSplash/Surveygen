@@ -2,7 +2,7 @@
   <div class="absolute right-0 top-12 w-64 rounded-lg bg-white p-4 shadow-lg">
     <div class="mb-4 flex items-center justify-between">
       <h3 class="text-lg font-semibold text-gray-800">设置</h3>
-      <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
+      <button @click="closePanel" class="text-gray-500 transition-transform duration-700 ease-in-out hover:text-gray-700" :class="{ 'rotate-180': isClosing }">
         <XMarkIcon class="h-5 w-5" />
       </button>
     </div>
@@ -55,21 +55,32 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/solid'
 import ToggleSwitch from './ToggleSwitch.vue'
 import GithubIcon from '../assets/github.svg'
 import QQIcon from '../assets/qq.svg'
 
-defineProps<{
-  isAdvancedMode: boolean
-  isAutoAnswerEnabled: boolean
-}>()
+const isClosing = ref(false)
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'close'): void
   (e: 'toggle-mode'): void
   (e: 'toggle-auto-answer'): void
   (e: 'randomize-all'): void
   (e: 'reset-survey'): void
+}>()
+
+function closePanel() {
+  isClosing.value = true
+  setTimeout(() => {
+    emit('close')
+    isClosing.value = false
+  }, 100)
+}
+
+defineProps<{
+  isAdvancedMode: boolean
+  isAutoAnswerEnabled: boolean
 }>()
 </script>
