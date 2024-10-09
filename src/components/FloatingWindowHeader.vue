@@ -18,7 +18,7 @@
       </button>
       <span class="text-xs opacity-75">已提交: {{ submissionCount }} 次</span>
 
-      <button @click="toggleSettings" class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30">
+      <button @click="handleToggleSettings" class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30">
         <CogIcon class="h-5 w-5" />
       </button>
     </div>
@@ -43,7 +43,8 @@ const emit = defineEmits<{
   (e: 'stopAutoAnswer'): void
 }>()
 
-const toggleSettings = () => {
+const handleToggleSettings = (event: MouseEvent) => {
+  event.stopPropagation()
   emit('toggleSettings')
 }
 

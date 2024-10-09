@@ -1,5 +1,5 @@
 <template>
-  <div class="absolute right-0 top-12 w-64 rounded-lg bg-white p-4 shadow-lg">
+  <div ref="panelRef" class="absolute right-0 top-12 w-64 rounded-lg bg-white p-4 shadow-lg" @click="handlePanelClick">
     <div class="mb-4 flex items-center justify-between">
       <h3 class="text-lg font-semibold text-gray-800">设置</h3>
       <button @click="closePanel" class="text-gray-500 transition-transform duration-700 ease-in-out hover:text-gray-700" :class="{ 'rotate-180': isClosing }">
@@ -55,23 +55,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/solid'
 import ToggleSwitch from './ToggleSwitch.vue'
 import GithubIcon from '../assets/github.svg'
 import QQIcon from '../assets/qq.svg'
 
+interface Props {
+  isAdvancedMode: boolean
+  isAutoAnswerEnabled: boolean
+}
+
+const props = defineProps<Props>()
+
+const emit = defineEmits(['close', 'toggle-mode', 'toggle-auto-answer', 'randomize-all', 'reset-survey'] as const)
+
 const isClosing = ref(false)
+const panelRef = ref<HTMLElement | null>(null)
 
-const emit = defineEmits<{
-  (e: 'close'): void
-  (e: 'toggle-mode'): void
-  (e: 'toggle-auto-answer'): void
-  (e: 'randomize-all'): void
-  (e: 'reset-survey'): void
-}>()
-
-function closePanel() {
+const closePanel = () => {
   isClosing.value = true
   setTimeout(() => {
     emit('close')
@@ -79,8 +81,14 @@ function closePanel() {
   }, 100)
 }
 
-defineProps<{
-  isAdvancedMode: boolean
-  isAutoAnswerEnabled: boolean
-}>()
+const handleClickOutside = (event: MouseEvent) => {
+  if (panelRef.value && !panelRef.value.contains(event.target as Node)) {
+    closePanel()
+  }
+}
+
+const handlePanelClick = (event: MouseEvent) => event.stopPropagation()
+
+onMounted(() => document.addEventListener('click', handleClickOutside))
+onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
