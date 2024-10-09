@@ -84,8 +84,6 @@ const isRedirecting = ref(false)
 const version = import.meta.env.VITE_APP_VERSION || '未知'
 
 const handleScroll = (event: WheelEvent) => {
-  event.stopPropagation()
-
   const container = scrollContainer.value
   if (!container) return
 
@@ -93,12 +91,18 @@ const handleScroll = (event: WheelEvent) => {
   const isAtTop = scrollTop === 0
   const isAtBottom = scrollTop + clientHeight >= scrollHeight
 
-  // 如果在顶部或底部，并且还想继续滚动，则阻止默认行为
-  if ((isAtTop && event.deltaY < 0) || (isAtBottom && event.deltaY > 0)) {
+  // 检查事件目标是否为输入框
+  const isInputElement = event.target instanceof HTMLInputElement && event.target.type === 'number'
+
+  // 如果不是输入框，并且在顶部或底部继续滚动，则阻止事件传播
+  if (!isInputElement && ((isAtTop && event.deltaY < 0) || (isAtBottom && event.deltaY > 0))) {
     event.preventDefault()
+    event.stopPropagation()
+  } else {
+    // 对于其他情况，只阻止事件传播，不阻止默认行为
+    event.stopPropagation()
   }
 }
-
 const scrollToQuestion = (index: number) => {
   nextTick(() => {
     const questionElement = questionRefs.value[index]?.questionRef
