@@ -85,6 +85,18 @@ const version = import.meta.env.VITE_APP_VERSION || '未知'
 
 const handleScroll = (event: WheelEvent) => {
   event.stopPropagation()
+
+  const container = scrollContainer.value
+  if (!container) return
+
+  const { scrollTop, scrollHeight, clientHeight } = container
+  const isAtTop = scrollTop === 0
+  const isAtBottom = scrollTop + clientHeight >= scrollHeight
+
+  // 如果在顶部或底部，并且还想继续滚动，则阻止默认行为
+  if ((isAtTop && event.deltaY < 0) || (isAtBottom && event.deltaY > 0)) {
+    event.preventDefault()
+  }
 }
 
 const scrollToQuestion = (index: number) => {

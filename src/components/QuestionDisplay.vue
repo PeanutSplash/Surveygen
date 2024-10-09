@@ -106,8 +106,8 @@
         <!-- 表头 -->
         <thead class="bg-gray-50">
           <tr>
-            <th class="w-1/4 px-4 py-2 text-xs font-medium uppercase tracking-wider text-gray-500"></th>
-            <th v-for="header in question.headers" :key="header" class="px-4 py-2 text-xs font-medium uppercase tracking-wider text-gray-500">
+            <th class="w-1/4 px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500"></th>
+            <th v-for="header in question.headers" :key="header" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
               {{ header }}
             </th>
           </tr>
