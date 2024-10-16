@@ -26,16 +26,27 @@
         v-for="(option, index) in question.options"
         :key="option.value"
         :class="[
-          'cursor-pointer rounded-lg p-3 transition-all duration-200 ease-in-out',
-          option.isSelected
-            ? 'border-2 border-indigo-300 bg-indigo-50 shadow-sm'
-            : 'border border-gray-200 bg-[#fefefe] hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-sm',
+          'rounded-lg p-3 transition-all duration-200 ease-in-out',
+          surveyStore.isAdvancedMode ? 'cursor-default border border-gray-200 bg-[#fefefe]' : '',
+          !surveyStore.isAdvancedMode
+            ? [
+                'cursor-pointer',
+                option.isSelected ? 'border-2 border-indigo-300 bg-indigo-50 shadow-sm' : 'border border-gray-200 bg-[#fefefe]',
+                !option.isSelected ? 'hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-sm' : '',
+              ]
+            : '',
         ]"
-        @click="handleOptionClick(option.text)"
+        @click="!surveyStore.isAdvancedMode && handleOptionClick(option.text)"
       >
-        <span :class="{ 'font-medium text-indigo-700': option.isSelected, 'text-gray-700': !option.isSelected }">
+        <span
+          :class="[
+            surveyStore.isAdvancedMode ? 'text-gray-700' : '',
+            !surveyStore.isAdvancedMode && option.isSelected ? 'font-medium text-indigo-700' : 'text-gray-700',
+          ]"
+        >
           {{ option.text }}
         </span>
+
         <div v-if="option.hasInput && option.isSelected" class="mt-2">
           <template v-if="option.inputs?.length === 1 || !surveyStore.isAdvancedMode">
             <input
@@ -122,6 +133,7 @@
                   :checked="option.isSelected"
                   :class="['h-4 w-4', question.type !== 'matrix' ? 'rounded' : '']"
                   @change="handleMatrixOptionClick(row, option)"
+                  :disabled="surveyStore.isAdvancedMode"
                 />
               </div>
               <CustomNumberInput
@@ -201,11 +213,12 @@
 
     <!-- 下拉选择题 -->
     <div v-else-if="question.type === 'select'" class="mt-4">
-      <select v-model="selectedValue" class="w-full rounded-md border border-gray-300 p-2">
+      <select v-model="selectedValue" class="w-full rounded-md border border-gray-300 p-2" :disabled="surveyStore.isAdvancedMode">
         <option v-for="option in question.selectOptions" :key="option.value" :value="option.value">
           {{ option.text }}
         </option>
       </select>
+
       <!-- 高级模式：概率设置 -->
       <div v-if="surveyStore.isAdvancedMode" class="mt-4 space-y-2">
         <div v-for="option in question.selectOptions" :key="option.value" class="flex items-center justify-between rounded-md bg-gray-50 p-2">
@@ -229,10 +242,12 @@
         <button
           v-for="option in question.scaleOptions"
           :key="option.value"
-          @click="handleScaleOptionClick(option)"
+          @click="!surveyStore.isAdvancedMode && handleScaleOptionClick(option)"
           :class="[
             'h-8 w-8 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none',
-            isOptionSelected(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+            surveyStore.isAdvancedMode
+              ? 'cursor-default bg-gray-200 text-gray-700'
+              : [isOptionSelected(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300', 'cursor-pointer'],
           ]"
         >
           {{ option.value }}
@@ -349,6 +364,7 @@ const updateTextareaValue = (index?: number) => {
 }
 
 const handleOptionClick = (optionText: string) => {
+  if (surveyStore.isAdvancedMode) return
   if (props.question.type === 'radio') {
     // 单选逻辑
     props.question.options?.forEach(option => {
@@ -381,6 +397,7 @@ const handleOptionClick = (optionText: string) => {
 }
 
 const handleMatrixOptionClick = (row: MatrixRow, clickedOption: Option) => {
+  if (surveyStore.isAdvancedMode) return
   if (props.question.type === 'matrix') {
     // 单选逻辑
     row.options.forEach((option: Option) => {
@@ -427,6 +444,7 @@ const updateSelectProbability = (updatedOption: Option) => {
 }
 
 const handleScaleOptionClick = (clickedOption: ScaleOption) => {
+  if (surveyStore.isAdvancedMode) return
   if (props.question.type === 'scale' && props.question.scaleOptions) {
     selectedScaleValue.value = clickedOption.value
     props.question.scaleOptions.forEach(option => {
