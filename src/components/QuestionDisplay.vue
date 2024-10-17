@@ -42,7 +42,7 @@
               :id="`input-${index}-0`"
               v-model="option.inputs[0].value"
               type="text"
-              class="block w-full rounded-md border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              class="block w-full rounded-md border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm hover:border-blue-500 focus:outline-[#2534DE]"
               @click.stop
               @input="updateOptionInput(index, 0, $event)"
             />
@@ -59,20 +59,26 @@
                 ]"
               >
                 <label :for="`input-${index}-${inputIndex}`" class="block text-xs font-medium text-gray-900"> 答案 {{ inputIndex + 1 }} </label>
-                <input
-                  :id="`input-${index}-${inputIndex}`"
-                  v-model="input.value"
-                  type="text"
-                  class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  @click.stop
-                  @input="updateOptionInput(index, inputIndex, $event)"
-                />
+                <div class="flex items-center space-x-2">
+                  <input
+                    :id="`input-${index}-${inputIndex}`"
+                    v-model="input.value"
+                    type="text"
+                    class="flex-grow rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 hover:border-blue-500 focus:outline-[#2534DE]"
+                    @click.stop
+                    @input="updateOptionInput(index, inputIndex, $event)"
+                  />
+                  <div class="flex gap-2">
+                    <p class="text-xs text-gray-500">选项概率:</p>
+                    <CustomNumberInput v-model="test" class="w-16" />
+                  </div>
+                </div>
               </div>
             </div>
           </template>
           <div v-if="surveyStore.isAdvancedMode" class="mt-2 flex justify-between">
             <button @click.stop="addInput(option)" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">
-              添加答案
+              添加更多答案
             </button>
             <button
               v-if="(option.inputs?.length ?? 0) > 1"
@@ -84,18 +90,10 @@
           </div>
         </div>
         <!-- 高级模式：概率设置 -->
-        <div v-if="surveyStore.isAdvancedMode" class="mt-2">
+        <div v-if="surveyStore.isAdvancedMode" class="mt-2 space-y-2">
           <label class="text-xs text-gray-500">概率：</label>
-          <input
-            type="number"
-            v-model.number="option.probability"
-            min="0"
-            max="100"
-            step="1"
-            class="w-16 rounded border p-1 text-xs focus:border-indigo-300 focus:outline-none focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            @input="updateProbability(index)"
-          />
-          <span class="ml-1 text-xs text-gray-500">%</span>
+          <CustomNumberInput v-model="option.probability" class="w-16" @input="updateProbability(index)" />
+          <!-- <span class="ml-1 text-xs text-gray-500">%</span> -->
         </div>
       </div>
     </div>
@@ -106,8 +104,8 @@
         <!-- 表头 -->
         <thead class="bg-gray-50">
           <tr>
-            <th class="w-1/4 px-4 py-2 text-xs font-medium uppercase tracking-wider text-gray-500"></th>
-            <th v-for="header in question.headers" :key="header" class="px-4 py-2 text-xs font-medium uppercase tracking-wider text-gray-500">
+            <th class="w-1/4 px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500"></th>
+            <th v-for="header in question.headers" :key="header" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
               {{ header }}
             </th>
           </tr>
@@ -116,22 +114,23 @@
         <tbody class="divide-y divide-gray-200 bg-[#fefefe]">
           <tr v-for="row in question.rows" :key="row.title">
             <td class="w-1/4 whitespace-nowrap px-4 py-2 font-medium text-gray-900">{{ row.title }}</td>
-            <td
-              v-for="(option, index) in row.options"
-              :key="index"
-              class="cursor-pointer whitespace-nowrap px-4 py-2 text-center"
-              @click="handleMatrixOptionClick(row, option)"
-            >
+            <td v-for="(option, index) in row.options" :key="index" class="cursor-pointer whitespace-nowrap px-4 py-2 text-center">
               <div class="flex items-center justify-center">
                 <input
                   :type="question.type === 'matrix' ? 'radio' : 'checkbox'"
                   :name="row.title"
                   :checked="option.isSelected"
                   :class="['h-4 w-4', question.type !== 'matrix' ? 'rounded' : '']"
-                  @click.stop
+                  @change="handleMatrixOptionClick(row, option)"
                 />
               </div>
-              <div v-if="surveyStore.isAdvancedMode" class="mt-1 text-xs text-gray-400">{{ option.probability.toFixed(0) }}%</div>
+              <CustomNumberInput
+                v-if="surveyStore.isAdvancedMode && (question.type === 'matrix' || (question.type === 'matrix-multiple' && option.isSelected))"
+                :showArrows="false"
+                v-model="option.probability"
+                inputClass="text-[10px] !px-[2px] !py-1 text-center !rounded-md"
+                class="mx-auto mt-1 w-10"
+              />
             </td>
           </tr>
         </tbody>
@@ -146,7 +145,7 @@
             :id="`textarea-input-0`"
             v-model="question.textareaInputs[0].value"
             type="text"
-            class="block w-full rounded-md border border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            class="block w-full rounded-md border border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm hover:border-blue-500 focus:outline-[#2534DE]"
             @input="updateTextareaValue(0)"
           />
         </template>
@@ -162,18 +161,26 @@
               ]"
             >
               <label :for="`textarea-input-${index}`" class="block text-xs font-medium text-gray-900">答案 {{ index + 1 }}</label>
-              <input
-                :id="`textarea-input-${index}`"
-                v-model="input.value"
-                type="text"
-                class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                @input="updateTextareaValue(index)"
-              />
+              <div class="flex items-center space-x-2">
+                <input
+                  :id="`textarea-input-${index}`"
+                  v-model="input.value"
+                  type="text"
+                  class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 hover:border-blue-500 focus:outline-[#2534DE]"
+                  @input="updateTextareaValue(index)"
+                />
+                <div class="flex gap-2 text-nowrap">
+                  <p class="text-xs text-gray-500">选项概率:</p>
+                  <CustomNumberInput v-model="test" class="w-16" />
+                </div>
+              </div>
             </div>
           </div>
         </template>
         <div class="mt-2 flex justify-between">
-          <button @click="addTextareaInput" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">添加答案</button>
+          <button @click="addTextareaInput" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">
+            添加更多答案
+          </button>
           <button
             v-if="question.textareaInputs && question.textareaInputs.length > 1"
             @click="removeTextareaInput(question.textareaInputs.length - 1)"
@@ -187,7 +194,7 @@
         v-else
         v-model="question.textareaValue"
         type="text"
-        class="w-full rounded-md border border-gray-300 p-2"
+        class="w-full rounded-md border border-gray-300 p-2 hover:border-blue-500 focus:outline-[#2534DE]"
         @input="(e: Event) => updateTextareaValue(+(e.target as HTMLInputElement).value)"
       />
     </div>
@@ -200,19 +207,14 @@
         </option>
       </select>
       <!-- 高级模式：概率设置 -->
-      <div v-if="surveyStore.isAdvancedMode" class="mt-2">
-        <div v-for="option in question.selectOptions" :key="option.value" class="flex items-center space-x-2">
-          <span>{{ option.text }}:</span>
-          <input
-            type="number"
-            v-model.number="option.probability"
-            min="0"
-            max="100"
-            step="1"
-            class="w-16 rounded border p-1 text-xs"
-            @input="updateSelectProbability(option)"
-          />
-          <span class="text-xs text-gray-500">%</span>
+      <div v-if="surveyStore.isAdvancedMode" class="mt-4 space-y-2">
+        <div v-for="option in question.selectOptions" :key="option.value" class="flex items-center justify-between rounded-md bg-gray-50 p-2">
+          <span class="text-sm text-gray-700">{{ option.text }}</span>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-gray-500">概率：</span>
+            <CustomNumberInput v-model="option.probability" class="w-20" inputClass="text-sm" @input="updateSelectProbability(option)" />
+            <span class="text-xs text-gray-500">%</span>
+          </div>
         </div>
       </div>
     </div>
@@ -236,6 +238,16 @@
           {{ option.value }}
         </button>
       </div>
+      <div v-if="surveyStore.isAdvancedMode" class="mt-4 space-y-2">
+        <div v-for="option in question.scaleOptions" :key="option.value" class="flex items-center justify-between rounded-md bg-gray-50 p-2">
+          <span class="text-sm text-gray-700">{{ option.value }}</span>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-gray-500">概率：</span>
+            <CustomNumberInput v-model="test" class="w-20" inputClass="text-sm" />
+            <span class="text-xs text-gray-500">%</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 未知题型 -->
@@ -254,7 +266,10 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import type { Question, MatrixRow, Option, ScaleOption } from '../types/survey'
 import { useSurveyStore } from '../stores/surveyStore'
+import CustomNumberInput from './CustomNumberInput.vue'
 
+const text = ref('')
+const test = ref('')
 const props = defineProps<{
   question: Question
 }>()

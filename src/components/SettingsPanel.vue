@@ -1,8 +1,8 @@
 <template>
-  <div class="absolute right-0 top-12 w-64 rounded-lg bg-white p-4 shadow-lg">
+  <div ref="panelRef" class="absolute right-0 top-12 w-64 rounded-lg bg-white p-4 shadow-lg" @click="handlePanelClick">
     <div class="mb-4 flex items-center justify-between">
       <h3 class="text-lg font-semibold text-gray-800">设置</h3>
-      <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
+      <button @click="closePanel" class="text-gray-500 transition-transform duration-700 ease-in-out hover:text-gray-700" :class="{ 'rotate-180': isClosing }">
         <XMarkIcon class="h-5 w-5" />
       </button>
     </div>
@@ -32,24 +32,63 @@
       <div class="mt-4 text-xs text-gray-500">
         <p>提示: 按下 F3 键可以快速显示/隐藏面板</p>
       </div>
+      <div class="mt-4 flex w-full items-center justify-center space-x-4">
+        <a
+          href="https://github.com/PeanutSplash/Surveygen"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="h-max w-max transform transition-all duration-300 hover:scale-110"
+        >
+          <GithubIcon class="h-7 w-7" />
+        </a>
+        <a
+          href="https://qm.qq.com/q/sdrf3ZJUvm"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="h-max w-max transform transition-all duration-300 hover:scale-110"
+        >
+          <QQIcon class="h-7 w-7" />
+        </a>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/solid'
 import ToggleSwitch from './ToggleSwitch.vue'
+import GithubIcon from '../assets/github.svg'
+import QQIcon from '../assets/qq.svg'
 
-defineProps<{
+interface Props {
   isAdvancedMode: boolean
   isAutoAnswerEnabled: boolean
-}>()
+}
 
-defineEmits<{
-  (e: 'close'): void
-  (e: 'toggle-mode'): void
-  (e: 'toggle-auto-answer'): void
-  (e: 'randomize-all'): void
-  (e: 'reset-survey'): void
-}>()
+const props = defineProps<Props>()
+
+const emit = defineEmits(['close', 'toggle-mode', 'toggle-auto-answer', 'randomize-all', 'reset-survey'] as const)
+
+const isClosing = ref(false)
+const panelRef = ref<HTMLElement | null>(null)
+
+const closePanel = () => {
+  isClosing.value = true
+  setTimeout(() => {
+    emit('close')
+    isClosing.value = false
+  }, 100)
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (panelRef.value && !panelRef.value.contains(event.target as Node)) {
+    closePanel()
+  }
+}
+
+const handlePanelClick = (event: MouseEvent) => event.stopPropagation()
+
+onMounted(() => document.addEventListener('click', handleClickOutside))
+onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
