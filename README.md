@@ -1,33 +1,125 @@
-# Vue 3 + TypeScript + Vite
+# SurveyGen
 
-这个模板应该能帮助你开始使用 Vite 开发 Vue 3 和 TypeScript 项目。该模板使用 Vue 3 的 `<script setup>` SFC，查看[script setup 文档](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup)以了解更多信息。
+<p align="center">
+  <img src="https://img.shields.io/badge/Vue-3.4.27-brightgreen" alt="Vue">
+  <img src="https://img.shields.io/badge/TypeScript-5.4.5-blue" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-5.2.12-purple" alt="Vite">
+  <img src="https://img.shields.io/badge/TailwindCSS-3.4.11-38B2AC" alt="TailwindCSS">
+  <img src="https://img.shields.io/badge/Pinia-2.2.2-yellow" alt="Pinia">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+</p>
 
-## 推荐的 IDE 设置
+<p align="center">
+  <b>一个现代化的问卷调查生成器</b>
+</p>
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)（并禁用 Vetur）+ [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)。
+## 📋 支持的问题类型
 
-## TS 中 `.vue` 导入的类型支持
+### 1. 单选题 (Radio)
+- 支持单选按钮样式
+- 可自定义选项数量
+- 支持必填设置
+- 支持选项说明
 
-TypeScript 默认无法处理 `.vue` 导入的类型信息，所以我们用 `vue-tsc` 替换 `tsc` CLI 进行类型检查。在编辑器中，我们需要 [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) 来让 TypeScript 语言服务识别 `.vue` 类型。
+### 2. 多选题 (Checkbox)
+- 支持多选按钮样式
+- 可自定义选项数量
+- 支持必填设置
+- 支持选项说明
+- 支持最大/最小选择数量限制
 
-如果你觉得独立的 TypeScript 插件不够快，Volar 还实现了一个更高性能的[接管模式](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669)。你可以通过以下步骤启用它：
+### 3. 矩阵题 (Matrix)
+- 支持行标题和列标题
+- 支持单选/多选模式
+- 可自定义行列数量
+- 支持必填设置
+- 支持行列说明
 
-1. 禁用内置的 TypeScript 扩展
-   1. 从 VSCode 的命令面板运行 `Extensions: Show Built-in Extensions`
-   2. 找到 `TypeScript and JavaScript Language Features`，右键选择 `Disable (Workspace)`
-2. 通过从命令面板运行 `Developer: Reload Window` 重新加载 VSCode 窗口。
+### 4. 文本题 (Textarea)
+- 支持单行/多行文本输入
+- 支持字数限制
+- 支持必填设置
+- 支持占位符提示
+- 支持正则表达式验证
 
-# Surveygen(问卷星自动答题助手)
+## 🎯 核心功能
 
-## 支持的问题类型
+### 问卷设计
+- 拖拽式问题添加
+- 问题排序和复制
+- 问题分组管理
+- 问卷模板保存
+- 问卷预览功能
 
-当前版本支持以下问题类型:
+### 数据管理
+- 问卷数据导出(CSV/Excel)
+- 数据统计分析
+- 答卷记录查看
+- 数据可视化展示
 
-1. 单选题 (Radio)
-2. 多选题 (Checkbox)
-3. 矩阵题 (Matrix)
-4. 文本题 (Textarea)
+### 主题定制
+- 自定义问卷主题色
+- 自定义字体样式
+- 自定义布局样式
+- 支持暗黑模式
 
-## 使用说明
+### 高级功能
+- 问卷分享链接
+- 答卷时间限制
+- 答卷次数限制
+- 问卷密码保护
+- 答卷IP限制
 
-...（这里可以添加使用说明和其他相关信息）
+## 🚀 快速开始
+
+### 安装
+```bash
+# 克隆项目
+git clone https://github.com/your-username/surveygen.git
+
+# 进入项目目录
+cd surveygen
+
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
+pnpm dev
+```
+
+## 📱 使用示例
+
+### 创建问卷
+1. 点击"新建问卷"按钮
+2. 从左侧拖拽问题类型到设计区
+3. 编辑问题内容和选项
+4. 设置问题属性（必填、验证等）
+5. 保存问卷
+
+### 发布问卷
+1. 点击"发布"按钮
+2. 设置问卷访问权限
+3. 获取问卷链接或二维码
+4. 分享给目标用户
+
+### 查看数据
+1. 进入"数据统计"页面
+2. 查看答卷数据统计
+3. 导出数据报表
+4. 分析数据结果
+
+## 🔧 技术栈
+
+- **前端框架**: Vue 3.4.27
+- **构建工具**: Vite 5.2.12
+- **开发语言**: TypeScript 5.4.5
+- **状态管理**: Pinia 2.2.2
+- **UI框架**: TailwindCSS 3.4.11
+
+## 📝 许可证
+
+[MIT](LICENSE)
+
+## 🤝 贡献指南
+
+欢迎提交 Issue 或 Pull Request 来帮助改进项目。
