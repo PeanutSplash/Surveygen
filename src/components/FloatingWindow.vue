@@ -257,7 +257,7 @@ const fillSurveyAnswers = async () => {
   }
 
   // 滚动到页面底部
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+  window.scrollTo(0, document.body.scrollHeight)
 
   // 添加定时器，等待一秒钟后点击提交按钮
   await new Promise(resolve => setTimeout(resolve, 1000))
@@ -546,7 +546,7 @@ onMounted(() => {
   surveyStore.loadAutoAnswerEnabled()
 
   // 加载高级模式状态
-  surveyStore.loadAdvancedModeState()
+  surveyStore.loadAdvancedMode()
 })
 
 onUnmounted(() => {
