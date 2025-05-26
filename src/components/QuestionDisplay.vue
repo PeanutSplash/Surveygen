@@ -20,7 +20,7 @@
     <!-- 单选题和多选题 -->
     <div
       v-if="question.type === 'radio' || question.type === 'checkbox'"
-      :class="['mt-4', hasInputOptions ? 'space-y-4' : 'space-y-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0 md:grid-cols-3 lg:grid-cols-4']"
+      :class="['mt-4', hasInputOptions ? 'space-y-4' : 'grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 space-y-0']"
     >
       <div
         v-for="(option, index) in question.options"
@@ -51,7 +51,7 @@
           <template v-if="option.inputs?.length === 1 || !surveyStore.isAdvancedMode">
             <input
               :id="`input-${index}-0`"
-              v-model="option.inputs[0].value"
+              v-model="option.inputs![0].value"
               type="text"
               class="block w-full rounded-md border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm hover:border-blue-500 focus:outline-[#2534DE]"
               @click.stop
@@ -152,10 +152,10 @@
     <!-- 文本题 -->
     <div v-else-if="question.type === 'textarea'" class="mt-4">
       <template v-if="surveyStore.isAdvancedMode">
-        <template v-if="question.textareaInputs?.length === 1 || !surveyStore.isAdvancedMode">
+        <template v-if="!question.textareaInputs || question.textareaInputs.length <= 1">
           <input
             :id="`textarea-input-0`"
-            v-model="question.textareaInputs[0].value"
+            v-model="question.textareaInputs![0].value"
             type="text"
             class="block w-full rounded-md border border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm hover:border-blue-500 focus:outline-[#2534DE]"
             @input="updateTextareaValue(0)"
@@ -602,9 +602,10 @@ const removeInput = (option: Option) => {
 
 const addTextareaInput = () => {
   if (!props.question.textareaInputs) {
-    props.question.textareaInputs = []
+    props.question.textareaInputs = [{ value: '' }]
+  } else {
+    props.question.textareaInputs.push({ value: '' })
   }
-  props.question.textareaInputs.push({ value: '' })
   surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
 }
 
