@@ -17,6 +17,7 @@
           :submission-count="surveyStore.submissionCount"
           @toggle-settings="toggleSettings"
           @stop-auto-answer="stopAutoAnswer"
+          @manual-submit="handleManualSubmit"
         />
         <div ref="scrollContainer" class="flex-1 overflow-auto p-4" @wheel="handleScroll">
           <div v-if="surveyStore.questions.length === 0" class="flex h-full flex-col items-center justify-center">
@@ -186,15 +187,14 @@ const isVerifying = ref(false)
 const verificationStatus = ref('')
 
 // 修改 handleVerification 函数
-const handleVerification = async () => {
+const handleVerification = async (): Promise<boolean> => {
   const verifyButton = document.querySelector('#SM_BTN_1') as HTMLElement
   if (verifyButton) {
     isVerifying.value = true
     verificationStatus.value = '正在绕过人机验证...'
     await simulateHumanClick(verifyButton)
 
-    // 等待验证结果
-    return new Promise<void>(resolve => {
+    return new Promise<boolean>(resolve => {
       const observer = new MutationObserver(async mutations => {
         for (const mutation of mutations) {
           if (mutation.type === 'childList') {
@@ -202,12 +202,11 @@ const handleVerification = async () => {
             for (let i = 0; i < addedNodes.length; i++) {
               const node = addedNodes[i] as HTMLElement
               if (node.id === 'SM_POP_1') {
-                // 滑块验证出现
                 verificationStatus.value = '正在绕过滑块验证...'
                 observer.disconnect()
                 await simulateSliderVerification()
                 isVerifying.value = false
-                resolve()
+                resolve(true)
                 return
               }
             }
@@ -217,7 +216,13 @@ const handleVerification = async () => {
               verificationStatus.value = '验证成功'
               observer.disconnect()
               isVerifying.value = false
-              resolve()
+              resolve(true)
+              return
+            } else if (target.classList.contains('sm-btn-fail')) {
+              verificationStatus.value = '验证失败'
+              observer.disconnect()
+              isVerifying.value = false
+              resolve(false)
               return
             }
           }
@@ -230,28 +235,35 @@ const handleVerification = async () => {
         subtree: true,
       })
 
-      // 设置超时，以防验证无法完成
       setTimeout(() => {
         observer.disconnect()
         isVerifying.value = false
-        verificationStatus.value = '验证超时'
-        resolve()
+        if (verificationStatus.value !== '验证成功') {
+          verificationStatus.value = '验证超时'
+          resolve(false)
+        } else {
+          resolve(true)
+        }
       }, 15000)
     })
   }
+  return true
 }
 
 // 修改 fillSurveyAnswers 函数
-const fillSurveyAnswers = async () => {
+const fillSurveyAnswers = async (): Promise<boolean> => {
   const { hasUnanswered, unansweredQuestions } = surveyStore.hasUnansweredQuestions()
   if (hasUnanswered) {
     handleUnansweredQuestionFlow(unansweredQuestions)
     eventBus.emit('showToast', { message: `请先完成所有问题的回答, 未完成的题目: ${unansweredQuestions.join(', ')}`, type: 'warning' })
-    return
+    return false
   }
 
   const surveyContent = document.getElementById('ctl00_ContentPlaceHolder1_JQ1_surveyContent')
-  if (!surveyContent) return
+  if (!surveyContent) {
+    eventBus.emit('showToast', { message: '未找到问卷内容区域', type: 'error' })
+    return false
+  }
 
   for (const question of surveyStore.questions) {
     const questionElement = surveyContent.querySelector(`#divquestion${question.index}`)
@@ -287,25 +299,51 @@ const fillSurveyAnswers = async () => {
     await simulateHumanClick(submitButton)
 
     // 处理可能出现的验证
-    await handleVerification()
+    const verificationSuccess = await handleVerification()
+    if (!verificationSuccess) {
+      eventBus.emit('showToast', { message: '人机验证失败或超时', type: 'error' })
+      return false
+    }
 
     // 再次点击提交按钮（如果验证后需要）
-    await simulateHumanClick(submitButton)
+    // 某些情况下，验证成功后会自动提交，或者需要再次点击
+    // 这里可以根据实际情况判断是否需要再次点击
+    // 为了简化，我们先假设验证成功后可能需要再次点击
+    // 如果验证成功后页面已跳转或提交已完成，这里的点击可能无效或报错，需要健壮性处理
+    // 例如检查页面状态或按钮是否存在
+
+    // 尝试再次点击提交，但这取决于具体的问卷系统行为
+    // 如果验证后自动提交，则不需要这步
+    // const submitButtonAfterVerification = document.getElementById('submit_button') as HTMLInputElement
+    // if (submitButtonAfterVerification) {
+    //   await simulateHumanClick(submitButtonAfterVerification)
+    // } else {
+    // 可能验证成功后按钮消失了，或者页面跳转了
+    // }
+  } else {
+    eventBus.emit('showToast', { message: '未找到提交按钮', type: 'error' })
+    return false
   }
 
-  return new Promise<void>(resolve => {
+  return new Promise<boolean>(resolve => {
     // 待页面跳转或其他完成标志
     const checkCompletion = setInterval(() => {
       if (document.location.href.includes('complete.aspx')) {
         clearInterval(checkCompletion)
-        resolve()
+        resolve(true)
       }
     }, 500)
 
     // 设置超时
     setTimeout(() => {
       clearInterval(checkCompletion)
-      resolve()
+      // 如果超时了，检查当前URL是否已经是完成页，因为上面的setInterval可能还没来得及检测到
+      if (document.location.href.includes('complete.aspx')) {
+        resolve(true)
+      } else {
+        eventBus.emit('showToast', { message: '提交超时，未跳转到完成页面', type: 'warning' })
+        resolve(false)
+      }
     }, 10000)
   })
 }
@@ -501,6 +539,26 @@ const resetSurvey = () => {
 const stopAutoAnswer = () => {
   surveyStore.setAutoAnswerEnabled(false)
   eventBus.emit('showToast', { message: '自动提交已停止', type: 'info' })
+}
+
+const handleManualSubmit = async () => {
+  // 确保自动提交是关闭的，如果用户希望单次提交
+  if (isAutoAnswerEnabled.value) {
+    surveyStore.setAutoAnswerEnabled(false)
+    eventBus.emit('showToast', { message: '自动提交已关闭', type: 'info' })
+    await nextTick()
+  }
+  eventBus.emit('showToast', { message: '正在发起单次提交...', type: 'info' })
+  const submissionSuccess = await fillSurveyAnswers()
+
+  if (submissionSuccess) {
+    eventBus.emit('showToast', { message: '单次提交成功！', type: 'success' })
+    // 提交成功后，通常会由 fillSurveyAnswers 内部的 MutationObserver 监测到页面跳转并增加计数和重载
+    // surveyStore.incrementSubmissionCount(); // 此行逻辑保留在 MutationObserver 中
+  } else {
+    // 具体失败原因已在 fillSurveyAnswers 或 handleVerification 内部提示。
+    // eventBus.emit('showToast', { message: '单次提交未能完成，请检查问卷状态或验证信息。', type: 'warning' })
+  }
 }
 
 onMounted(() => {

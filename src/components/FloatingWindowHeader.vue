@@ -16,6 +16,12 @@
           停止提交
         </span>
       </button>
+      <button
+        @click="manualSubmit"
+        class="rounded-full bg-white bg-opacity-20 px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+      >
+        <span class="flex items-center"> 单次提交 </span>
+      </button>
       <span class="text-xs opacity-75">已提交: {{ submissionCount }} 次</span>
 
       <button @click="handleToggleSettings" class="rounded-full bg-white bg-opacity-20 p-1 text-white transition-colors duration-200 hover:bg-opacity-30">
@@ -41,6 +47,7 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'toggleSettings'): void
   (e: 'stopAutoAnswer'): void
+  (e: 'manualSubmit'): void
 }>()
 
 const handleToggleSettings = (event: MouseEvent) => {
@@ -50,6 +57,10 @@ const handleToggleSettings = (event: MouseEvent) => {
 
 const stopAutoAnswer = () => {
   emit('stopAutoAnswer')
+}
+
+const manualSubmit = () => {
+  emit('manualSubmit')
 }
 
 const isAutoAnswerEnabled = computed(() => surveyStore.isAutoAnswerEnabled)
