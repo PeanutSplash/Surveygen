@@ -158,7 +158,7 @@
             v-model="question.textareaInputs![0].value"
             type="text"
             class="block w-full rounded-md border border-gray-300 p-2 text-sm leading-5 text-gray-900 shadow-sm hover:border-blue-500 focus:outline-[#2534DE]"
-            @input="updateTextareaValue(0)"
+            @input="updateTextareaValue()"
           />
         </template>
         <template v-else>
@@ -179,7 +179,7 @@
                   v-model="input.value"
                   type="text"
                   class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 hover:border-blue-500 focus:outline-[#2534DE]"
-                  @input="updateTextareaValue(index)"
+                  @input="updateTextareaValue()"
                 />
                 <div class="flex gap-2 text-nowrap">
                   <p class="text-xs text-gray-500">选项概率:</p>
@@ -207,7 +207,7 @@
         v-model="question.textareaValue"
         type="text"
         class="w-full rounded-md border border-gray-300 p-2 hover:border-blue-500 focus:outline-[#2534DE]"
-        @input="(e: Event) => updateTextareaValue(+(e.target as HTMLInputElement).value)"
+        @input="updateTextareaValue"
       />
     </div>
 
@@ -364,13 +364,13 @@ const updateProbability = (index: number) => {
 
 let observer: MutationObserver | null = null
 
-const updateTextareaValue = (index?: number) => {
-  if (props.question.textareaInputs) {
-    const newValue = props.question.textareaInputs.map(input => input.value).join(', ')
-    surveyStore.updateQuestionTextarea(props.question.index, newValue)
-  } else if (typeof index === 'undefined') {
-    // 处理单个文本框的情况
-    surveyStore.updateQuestionTextarea(props.question.index, textareaValue.value)
+const updateTextareaValue = () => {
+  if (surveyStore.isAdvancedMode) {
+    if (props.question.textareaInputs) {
+      surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
+    }
+  } else {
+    surveyStore.updateQuestionTextarea(props.question.index, props.question.textareaValue || '')
   }
 }
 
