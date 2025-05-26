@@ -83,6 +83,24 @@ const isRedirecting = ref(false)
 // 获取版本号
 const version = import.meta.env.VITE_APP_VERSION || '未知'
 
+const handleUnansweredQuestionFlow = (unansweredQuestions: number[]): boolean => {
+  if (unansweredQuestions.length > 0) {
+    const firstUnansweredIndex = unansweredQuestions[0]
+    scrollToQuestion(firstUnansweredIndex)
+
+    const questionComponent = questionRefs.value[firstUnansweredIndex]
+    if (questionComponent && questionComponent.questionRef) {
+      const questionElement = questionComponent.questionRef as HTMLElement
+      questionElement.classList.add('flash-warning')
+      setTimeout(() => {
+        questionElement.classList.remove('flash-warning')
+      }, 1500) // 闪烁1.5秒
+    }
+    return true // 表示有未回答的问题
+  }
+  return false // 表示没有未回答的问题
+}
+
 const handleScroll = (event: WheelEvent) => {
   const container = scrollContainer.value
   if (!container) return
@@ -227,6 +245,7 @@ const handleVerification = async () => {
 const fillSurveyAnswers = async () => {
   const { hasUnanswered, unansweredQuestions } = surveyStore.hasUnansweredQuestions()
   if (hasUnanswered) {
+    handleUnansweredQuestionFlow(unansweredQuestions)
     eventBus.emit('showToast', { message: `请先完成所有问题的回答, 未完成的题目: ${unansweredQuestions.join(', ')}`, type: 'warning' })
     return
   }
@@ -450,6 +469,7 @@ const toggleAutoAnswer = async () => {
   if (isAutoAnswerEnabled.value) {
     const { hasUnanswered, unansweredQuestions } = surveyStore.hasUnansweredQuestions()
     if (hasUnanswered) {
+      handleUnansweredQuestionFlow(unansweredQuestions)
       eventBus.emit('showToast', { message: `请先完成所有问题的回答。未完成的题号: ${unansweredQuestions.join(', ')}`, type: 'warning' })
       isAutoAnswerEnabled.value = false
       localStorage.setItem('autoAnswerEnabled', 'false')
@@ -646,5 +666,27 @@ onUnmounted(() => {
 .animate-border-flow {
   background-size: 200% 200%;
   animation: border-flow 3s linear infinite;
+}
+
+@keyframes elegant-warning-pulse {
+  0%,
+  100% {
+    background-color: #fefefe; /* QuestionDisplay 组件的默认背景色 */
+    box-shadow: none; /* 假设默认非悬浮状态下没有阴影 */
+    transform: scale(1);
+  }
+  50% {
+    background-color: #fffde7; /* 一个非常浅的乳黄色，用于柔和提示 */
+    /* 一个比默认更明显但不过于强烈的阴影，营造一种"焦点"感 */
+    box-shadow:
+      0 8px 16px -4px rgba(0, 0, 0, 0.1),
+      0 4px 8px -3px rgba(0, 0, 0, 0.08);
+    transform: scale(1.015); /* 轻微放大，增加强调 */
+  }
+}
+
+.flash-warning {
+  /* animation: flash-warning-animation 0.5s 3; */ /* 旧的动画引用将被替换 */
+  animation: elegant-warning-pulse 0.7s ease-in-out 3; /* 动画持续0.7秒，执行3次，使用缓入缓出效果 */
 }
 </style>
