@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <b>问卷星自动答题</b>
+  <b>问卷星自动答题助手</b>
 </p>
 
 <p align="center">
