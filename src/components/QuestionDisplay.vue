@@ -550,10 +550,32 @@ watch(
 const randomizeQuestion = () => {
   if (props.question.options) {
     randomizeOptions(props.question.options)
+    if (isEditingProbability.value) {
+      editedProbabilities.value = props.question.options.map(o => o.probability)
+    }
   } else if (props.question.rows) {
     props.question.rows.forEach(row => randomizeOptions(row.options))
+  } else if (props.question.selectOptions) {
+    randomizeOptions(props.question.selectOptions)
+    if (isEditingProbability.value) {
+      editedProbabilities.value = props.question.selectOptions.map(
+        o => o.probability,
+      )
+    }
   }
-  surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
+
+  if (props.question.options) {
+    surveyStore.updateQuestionOptions(
+      props.question.index,
+      props.question.options || [],
+    )
+  } else if (props.question.selectOptions) {
+    surveyStore.updateQuestionSelectOptions(
+      props.question.index,
+      props.question.selectOptions,
+      props.question.selectedValue || '',
+    )
+  }
 }
 
 const randomizeOptions = (options: any[]) => {
