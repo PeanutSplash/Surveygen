@@ -38,7 +38,11 @@
       </div>
       <div v-if="surveyStore.isAdvancedMode" class="flex items-center space-x-1">
         <button @click="randomizeQuestion" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">随机</button>
-        <template v-if="question.type === 'radio' || question.type === 'checkbox' || question.type === 'select' || question.type === 'scale'">
+        <template
+          v-if="
+            question.type === 'radio' || question.type === 'checkbox' || question.type === 'select' || question.type === 'scale' || question.type === 'textarea'
+          "
+        >
           <template v-if="!isEditingProbability">
             <button @click="startEditProbability" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">编辑概率</button>
           </template>
@@ -219,35 +223,49 @@
                   class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 hover:border-blue-500 focus:outline-[#2534DE]"
                   @input="updateTextareaValue()"
                 />
-                <!-- 文本题概率编辑功能待实现 -->
-                <!-- <div class="flex gap-2 text-nowrap">
-                  <p class="text-xs text-gray-500">选项概率:</p>
-                  <CustomNumberInput v-model="test" class="w-16" />
-                </div> -->
+                <!-- 文本题概率编辑 -->
+                <div v-if="surveyStore.isAdvancedMode" class="flex gap-2 text-nowrap">
+                  <p class="text-xs text-gray-500">概率:</p>
+                  <template v-if="isEditingProbability">
+                    <CustomNumberInput v-model="editedProbabilities[index]" :min="0" :max="100" class="w-16" />
+                  </template>
+                  <template v-else>
+                    <span class="text-xs text-gray-700">{{ input.probability || 0 }}%</span>
+                  </template>
+                </div>
               </div>
             </div>
           </div>
         </template>
-        <div class="mt-2 flex justify-between">
-          <button @click="addTextareaInput" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">
-            添加更多答案
-          </button>
-          <button
-            v-if="question.textareaInputs && question.textareaInputs.length > 1"
-            @click="removeTextareaInput(question.textareaInputs.length - 1)"
-            class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
-          >
-            删除
-          </button>
+        <div class="mt-2 space-y-2">
+          <!-- 快速填入选项 -->
+          <QuickFillButtons @fill="fillQuickText" />
+          <div class="flex justify-between">
+            <button @click="addTextareaInput" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">
+              添加更多答案
+            </button>
+            <button
+              v-if="question.textareaInputs && question.textareaInputs.length > 1"
+              @click="removeTextareaInput(question.textareaInputs.length - 1)"
+              class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
+            >
+              删除
+            </button>
+          </div>
         </div>
       </template>
-      <input
-        v-else
-        v-model="question.textareaValue"
-        type="text"
-        class="w-full rounded-md border border-gray-300 p-2 hover:border-blue-500 focus:outline-[#2534DE]"
-        @input="updateTextareaValue"
-      />
+      <template v-else>
+        <input
+          v-model="question.textareaValue"
+          type="text"
+          class="w-full rounded-md border border-gray-300 p-2 hover:border-blue-500 focus:outline-[#2534DE]"
+          @input="updateTextareaValue"
+        />
+        <!-- 普通模式下的快速填入选项 -->
+        <div class="mt-2">
+          <QuickFillButtons @fill="fillQuickText" />
+        </div>
+      </template>
     </div>
 
     <!-- 下拉选择题 -->
@@ -314,6 +332,7 @@ import CustomNumberInput from './CustomNumberInput.vue'
 import eventBus from '../utils/eventBus'
 import { calculatePresetDistribution, calculateRangeDistribution, type DistributionType } from '../utils/probabilityDistribution'
 import ScaleQuestion from './ScaleQuestion.vue'
+import QuickFillButtons from './QuickFillButtons.vue'
 import type { RangeConfig } from './ProbabilityEditor.vue'
 
 const props = defineProps<{
@@ -540,6 +559,11 @@ const randomizeQuestion = () => {
     if (isEditingProbability.value) {
       editedProbabilities.value = props.question.scaleOptions.map(o => o.probability)
     }
+  } else if (props.question.textareaInputs) {
+    randomizeTextareaOptions(props.question.textareaInputs)
+    if (isEditingProbability.value) {
+      editedProbabilities.value = props.question.textareaInputs.map(input => input.probability || 0)
+    }
   }
 
   if (props.question.options) {
@@ -548,6 +572,8 @@ const randomizeQuestion = () => {
     surveyStore.updateQuestionSelectOptions(props.question.index, props.question.selectOptions, props.question.selectedValue || '')
   } else if (props.question.scaleOptions) {
     surveyStore.updateQuestionScaleOptions(props.question.index, props.question.scaleOptions)
+  } else if (props.question.textareaInputs) {
+    surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
   }
 }
 
@@ -560,6 +586,20 @@ const randomizeOptions = (options: any[]) => {
     } else {
       const randomProb = Math.floor(Math.random() * (remaining - (total - index - 1))) + 1
       option.probability = randomProb
+      remaining -= randomProb
+    }
+  })
+}
+
+const randomizeTextareaOptions = (inputs: { value: string; probability?: number }[]) => {
+  const total = inputs.length
+  let remaining = 100
+  inputs.forEach((input, index) => {
+    if (index === total - 1) {
+      input.probability = remaining
+    } else {
+      const randomProb = Math.floor(Math.random() * (remaining - (total - index - 1))) + 1
+      input.probability = randomProb
       remaining -= randomProb
     }
   })
@@ -578,6 +618,8 @@ const startEditProbability = () => {
       end: Math.max(0, props.question.scaleOptions.length - 1),
       weight: 70,
     }
+  } else if (props.question.textareaInputs) {
+    editedProbabilities.value = props.question.textareaInputs.map(input => input.probability || 0)
   }
   probabilityEditMode.value = 'quick'
   isEditingProbability.value = true
@@ -631,6 +673,11 @@ const saveProbability = () => {
       option.probability = Number(editedProbabilities.value[idx])
     })
     surveyStore.updateQuestionScaleOptions(props.question.index, props.question.scaleOptions)
+  } else if (props.question.textareaInputs) {
+    props.question.textareaInputs.forEach((input, idx) => {
+      input.probability = Number(editedProbabilities.value[idx])
+    })
+    surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
   }
 
   surveyStore.saveData()
@@ -711,11 +758,30 @@ const removeInput = (option: Option) => {
 
 const addTextareaInput = () => {
   if (!props.question.textareaInputs) {
-    props.question.textareaInputs = [{ value: '' }]
+    props.question.textareaInputs = [{ value: '', probability: 100 }]
   } else {
-    props.question.textareaInputs.push({ value: '' })
+    props.question.textareaInputs.push({ value: '', probability: 0 })
   }
   surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
+}
+
+const fillQuickText = (text: string) => {
+  if (surveyStore.isAdvancedMode) {
+    // 高级模式：填入到 textareaInputs
+    if (props.question.textareaInputs && props.question.textareaInputs.length > 0) {
+      // 填入到第一个空白输入框或最后一个输入框
+      const emptyInput = props.question.textareaInputs.find(input => !input.value.trim())
+      if (emptyInput) {
+        emptyInput.value = text
+      } else {
+        props.question.textareaInputs[props.question.textareaInputs.length - 1].value = text
+      }
+    }
+  } else {
+    // 非高级模式：直接设置 textareaValue
+    props.question.textareaValue = text
+  }
+  updateTextareaValue()
 }
 
 const removeTextareaInput = (index: number) => {

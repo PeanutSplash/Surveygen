@@ -190,7 +190,7 @@ const parseTextAreaQuestion = (questionElement: Element) => {
   return {
     textareaValue,
     textareaId: textarea?.id || '',
-    textareaInputs: [{ value: textareaValue }],
+    textareaInputs: [{ value: textareaValue, probability: 100 }],
   }
 }
 
