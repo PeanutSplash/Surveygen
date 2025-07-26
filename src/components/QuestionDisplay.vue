@@ -40,15 +40,17 @@
         <button @click="randomizeQuestion" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">随机</button>
         <template
           v-if="
-            question.type === 'radio' || question.type === 'checkbox' || question.type === 'select' || question.type === 'scale' || question.type === 'textarea'
+            question.type === 'radio' ||
+            question.type === 'checkbox' ||
+            question.type === 'select' ||
+            question.type === 'scale' ||
+            question.type === 'textarea' ||
+            question.type === 'matrix' ||
+            question.type === 'matrix-multiple'
           "
         >
           <template v-if="!isEditingProbability">
             <button @click="startEditProbability" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">编辑概率</button>
-          </template>
-          <template v-else>
-            <button @click="saveProbability" class="rounded bg-indigo-500 px-2 py-1 text-xs text-white hover:bg-indigo-600">保存</button>
-            <button @click="cancelEditProbability" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">取消</button>
           </template>
         </template>
       </div>
@@ -152,7 +154,7 @@
     </div>
 
     <!-- 矩阵题和矩阵多选题 -->
-    <div v-else-if="question.type === 'matrix' || question.type === 'matrix-multiple'" class="overflow-x-auto">
+    <div v-else-if="question.type === 'matrix' || question.type === 'matrix-multiple'" class="mt-4 space-y-4">
       <table class="min-w-full divide-y divide-gray-200 text-xs">
         <!-- 表头 -->
         <thead class="bg-gray-50">
@@ -167,8 +169,11 @@
         <tbody class="divide-y divide-gray-200 bg-[#fefefe]">
           <tr v-for="row in question.rows" :key="row.title">
             <td class="w-1/4 whitespace-nowrap px-4 py-2 font-medium text-gray-900">{{ row.title }}</td>
-            <td v-for="(option, index) in row.options" :key="index" class="cursor-pointer whitespace-nowrap px-4 py-2 text-center">
-              <div class="flex items-center justify-center">
+            <td v-for="(option, index) in row.options" :key="index" class="cursor-pointer whitespace-nowrap px-2 py-2 text-center">
+              <div 
+                class="flex items-center justify-center rounded-md px-2 py-1 transition-colors duration-200"
+                :style="getMatrixProbabilityStyle(row, option)"
+              >
                 <input
                   :type="question.type === 'matrix' ? 'radio' : 'checkbox'"
                   :name="row.title"
@@ -178,17 +183,35 @@
                   :disabled="surveyStore.isAdvancedMode"
                 />
               </div>
-              <CustomNumberInput
-                v-if="surveyStore.isAdvancedMode && (question.type === 'matrix' || (question.type === 'matrix-multiple' && option.isSelected))"
-                :showArrows="false"
-                v-model="option.probability"
-                inputClass="text-[10px] !px-[2px] !py-1 text-center !rounded-md"
-                class="mx-auto mt-1 w-10"
-              />
             </td>
           </tr>
         </tbody>
       </table>
+
+      <!-- 高级模式概率管理 -->
+      <div v-if="surveyStore.isAdvancedMode" class="space-y-3">
+        <!-- 概率编辑器 -->
+        <ProbabilityEditor
+          v-if="isEditingProbability"
+          :mode="probabilityEditMode"
+          :options="flattenedMatrixOptions"
+          :selected-range="selectedRange"
+          @mode-change="probabilityEditMode = $event"
+          @update:selected-range="selectedRange = $event"
+          @apply-preset="handleMatrixApplyPreset"
+          @apply-range="handleMatrixApplyRange"
+        />
+
+        <!-- 矩阵概率列表 -->
+        <MatrixProbabilityList
+          :rows="question.rows || []"
+          :edited-probabilities="editedMatrixProbabilities"
+          :is-editing="isEditingProbability"
+          :edit-mode="probabilityEditMode"
+          :get-probability-style="getMatrixProbabilityStyle"
+          @update-probability="handleMatrixUpdateProbability"
+        />
+      </div>
     </div>
 
     <!-- 文本题 -->
@@ -321,6 +344,27 @@
         <div class="mt-2 max-h-40 overflow-auto rounded border border-yellow-200 bg-[#fefefe] p-2 text-xs text-gray-600" v-html="question.unknownContent"></div>
       </details>
     </div>
+
+    <!-- Sticky 保存按钮区域 -->
+    <div 
+      v-if="surveyStore.isAdvancedMode && isEditingProbability" 
+      class="sticky bottom-4 mt-6 flex justify-center"
+    >
+      <div class="flex space-x-2 rounded-lg bg-white px-4 py-2 shadow-lg ring-1 ring-black ring-opacity-5">
+        <button 
+          @click="saveProbability" 
+          class="rounded bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          保存概率设置
+        </button>
+        <button 
+          @click="cancelEditProbability" 
+          class="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          取消
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -333,7 +377,8 @@ import eventBus from '../utils/eventBus'
 import { calculatePresetDistribution, calculateRangeDistribution, type DistributionType } from '../utils/probabilityDistribution'
 import ScaleQuestion from './ScaleQuestion.vue'
 import QuickFillButtons from './QuickFillButtons.vue'
-import type { RangeConfig } from './ProbabilityEditor.vue'
+import ProbabilityEditor, { type RangeConfig } from './ProbabilityEditor.vue'
+import MatrixProbabilityList from './MatrixProbabilityList.vue'
 
 const props = defineProps<{
   question: Question
@@ -362,8 +407,22 @@ const getProbabilityStyle = (option: ScaleOption): Record<string, string> => {
     }
   }
 
-  const probability = option.probability || 0
-  const maxProbability = Math.max(...(props.question.scaleOptions?.map(o => o.probability || 0) || [0]))
+  // 获取当前概率值：编辑模式下且非精确调整时使用编辑中的值
+  let probability = option.probability || 0
+  if (isEditingProbability.value && probabilityEditMode.value !== 'manual') {
+    const optionIndex = props.question.scaleOptions?.findIndex(o => o.value === option.value) ?? -1
+    if (optionIndex >= 0 && editedProbabilities.value[optionIndex] !== undefined) {
+      probability = editedProbabilities.value[optionIndex]
+    }
+  }
+
+  // 获取最大概率用于计算相对强度
+  let maxProbability: number
+  if (isEditingProbability.value && probabilityEditMode.value !== 'manual') {
+    maxProbability = Math.max(...editedProbabilities.value.filter(p => p !== undefined))
+  } else {
+    maxProbability = Math.max(...(props.question.scaleOptions?.map(o => o.probability || 0) || [0]))
+  }
 
   if (probability === 0) {
     return {
@@ -404,13 +463,100 @@ const getProbabilityStyle = (option: ScaleOption): Record<string, string> => {
   }
 }
 
+// 为矩阵题选项计算颜色样式（按行独立计算）
+const getMatrixProbabilityStyle = (row: MatrixRow, option: Option): Record<string, string> => {
+  if (!surveyStore.isAdvancedMode) {
+    return {
+      backgroundColor: '',
+      color: '',
+    }
+  }
+
+  if (!props.question.rows) {
+    return { backgroundColor: '', color: '' }
+  }
+
+  const rowIndex = props.question.rows.findIndex(r => r.title === row.title)
+  const optionIndex = row.options.findIndex(o => o === option)
+
+  // 获取当前概率值：编辑模式下且非精确调整时使用编辑中的值
+  let probability = option.probability || 0
+  if (isEditingProbability.value && probabilityEditMode.value !== 'manual') {
+    const editedRowProbabilities = editedMatrixProbabilities.value[rowIndex]
+    if (editedRowProbabilities && editedRowProbabilities[optionIndex] !== undefined) {
+      probability = editedRowProbabilities[optionIndex]
+    }
+  }
+
+  // 获取该行内的最大概率用于计算相对强度
+  let maxProbabilityInRow: number
+  if (isEditingProbability.value && probabilityEditMode.value !== 'manual') {
+    const editedRowProbabilities = editedMatrixProbabilities.value[rowIndex] || []
+    maxProbabilityInRow = Math.max(...editedRowProbabilities.filter(p => p !== undefined && p !== null))
+  } else {
+    maxProbabilityInRow = Math.max(...row.options.map(o => o.probability || 0))
+  }
+
+  if (probability === 0) {
+    return {
+      backgroundColor: '#f3f4f6', // gray-100
+      color: '#6b7280', // gray-500
+    }
+  }
+
+  // 根据该行内的最大概率计算颜色强度
+  const intensity = maxProbabilityInRow > 0 ? probability / maxProbabilityInRow : 0
+
+  // 使用绿色渐变，从浅到深
+  if (intensity >= 0.8) {
+    return {
+      backgroundColor: '#15803d', // green-700
+      color: '#ffffff',
+    }
+  } else if (intensity >= 0.6) {
+    return {
+      backgroundColor: '#16a34a', // green-600
+      color: '#ffffff',
+    }
+  } else if (intensity >= 0.4) {
+    return {
+      backgroundColor: '#22c55e', // green-500
+      color: '#ffffff',
+    }
+  } else if (intensity >= 0.2) {
+    return {
+      backgroundColor: '#4ade80', // green-400
+      color: '#ffffff',
+    }
+  } else {
+    return {
+      backgroundColor: '#86efac', // green-300
+      color: '#166534', // green-800
+    }
+  }
+}
+
 const isEditingProbability = ref(false)
 const editedProbabilities = ref<number[]>([])
+const editedMatrixProbabilities = ref<number[][]>([])
 const probabilityEditMode = ref<'quick' | 'range' | 'manual'>('quick')
 const selectedRange = ref<RangeConfig>({ start: 0, end: 0, weight: 70 })
 
 const hasInputOptions = computed(() => {
   return props.question.options?.some(option => option.hasInput) || false
+})
+
+// 为矩阵题创建扁平化选项（用于概率编辑器）
+const flattenedMatrixOptions = computed(() => {
+  if (!props.question.rows) return []
+  return props.question.rows.flatMap(row => 
+    row.options.map((option, optionIndex) => ({
+      value: optionIndex + 1,
+      label: `选项${optionIndex + 1}`,
+      probability: option.probability,
+      isSelected: option.isSelected
+    }))
+  )
 })
 
 let observer: MutationObserver | null = null
@@ -549,6 +695,9 @@ const randomizeQuestion = () => {
     }
   } else if (props.question.rows) {
     props.question.rows.forEach(row => randomizeOptions(row.options))
+    if (isEditingProbability.value) {
+      editedMatrixProbabilities.value = props.question.rows.map(row => row.options.map(option => option.probability))
+    }
   } else if (props.question.selectOptions) {
     randomizeOptions(props.question.selectOptions)
     if (isEditingProbability.value) {
@@ -568,6 +717,8 @@ const randomizeQuestion = () => {
 
   if (props.question.options) {
     surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
+  } else if (props.question.rows) {
+    surveyStore.updateQuestionMatrix(props.question.index, props.question.rows)
   } else if (props.question.selectOptions) {
     surveyStore.updateQuestionSelectOptions(props.question.index, props.question.selectOptions, props.question.selectedValue || '')
   } else if (props.question.scaleOptions) {
@@ -620,6 +771,9 @@ const startEditProbability = () => {
     }
   } else if (props.question.textareaInputs) {
     editedProbabilities.value = props.question.textareaInputs.map(input => input.probability || 0)
+  } else if (props.question.rows) {
+    // 矩阵题：创建编辑用的概率数组
+    editedMatrixProbabilities.value = props.question.rows.map(row => row.options.map(option => option.probability))
   }
   probabilityEditMode.value = 'quick'
   isEditingProbability.value = true
@@ -651,33 +805,98 @@ const handleUpdateProbability = (data: { index: number; value: number }) => {
   editedProbabilities.value[data.index] = data.value
 }
 
-const saveProbability = () => {
-  const total = editedProbabilities.value.reduce((sum, p) => sum + Number(p), 0)
-  if (total !== 100) {
-    eventBus.emit('showToast', { message: '概率总和必须等于100', type: 'warning' })
-    return
-  }
+// 矩阵题专用处理函数
+const handleMatrixApplyPreset = (type: DistributionType) => {
+  if (!props.question.rows) return
+  
+  props.question.rows.forEach((row, rowIndex) => {
+    const probabilities = calculatePresetDistribution(type, row.options.length)
+    if (!editedMatrixProbabilities.value[rowIndex]) {
+      editedMatrixProbabilities.value[rowIndex] = []
+    }
+    probabilities.forEach((prob, optionIndex) => {
+      editedMatrixProbabilities.value[rowIndex][optionIndex] = prob
+    })
+  })
+}
 
-  if (props.question.options) {
-    props.question.options.forEach((option, idx) => {
-      option.probability = Number(editedProbabilities.value[idx])
+const handleMatrixApplyRange = () => {
+  if (!props.question.rows || selectedRange.value.weight <= 0 || selectedRange.value.weight > 100) return
+  
+  props.question.rows.forEach((row, rowIndex) => {
+    const probabilities = calculateRangeDistribution(
+      selectedRange.value.start,
+      selectedRange.value.end,
+      selectedRange.value.weight,
+      row.options.length
+    )
+    if (!editedMatrixProbabilities.value[rowIndex]) {
+      editedMatrixProbabilities.value[rowIndex] = []
+    }
+    probabilities.forEach((prob, optionIndex) => {
+      editedMatrixProbabilities.value[rowIndex][optionIndex] = prob
     })
-    surveyStore.updateQuestionOptions(props.question.index, props.question.options)
-  } else if (props.question.selectOptions) {
-    props.question.selectOptions.forEach((option, idx) => {
-      option.probability = Number(editedProbabilities.value[idx])
+  })
+}
+
+const handleMatrixUpdateProbability = (data: { rowIndex: number; optionIndex: number; value: number }) => {
+  if (!editedMatrixProbabilities.value[data.rowIndex]) {
+    editedMatrixProbabilities.value[data.rowIndex] = []
+  }
+  editedMatrixProbabilities.value[data.rowIndex][data.optionIndex] = data.value
+}
+
+const saveProbability = () => {
+  if (props.question.rows) {
+    // 矩阵题：验证每行概率总和
+    let hasError = false
+    for (let rowIndex = 0; rowIndex < props.question.rows.length; rowIndex++) {
+      const rowProbabilities = editedMatrixProbabilities.value[rowIndex] || []
+      const total = rowProbabilities.reduce((sum, p) => sum + Number(p || 0), 0)
+      if (total !== 100) {
+        eventBus.emit('showToast', { message: `第${rowIndex + 1}行概率总和必须等于100，当前为${total}`, type: 'warning' })
+        hasError = true
+        break
+      }
+    }
+    if (hasError) return
+
+    // 保存矩阵题概率
+    props.question.rows.forEach((row, rowIndex) => {
+      row.options.forEach((option, optionIndex) => {
+        option.probability = Number(editedMatrixProbabilities.value[rowIndex]?.[optionIndex] || 0)
+      })
     })
-    surveyStore.updateQuestionSelectOptions(props.question.index, props.question.selectOptions, props.question.selectedValue || '')
-  } else if (props.question.scaleOptions) {
-    props.question.scaleOptions.forEach((option, idx) => {
-      option.probability = Number(editedProbabilities.value[idx])
-    })
-    surveyStore.updateQuestionScaleOptions(props.question.index, props.question.scaleOptions)
-  } else if (props.question.textareaInputs) {
-    props.question.textareaInputs.forEach((input, idx) => {
-      input.probability = Number(editedProbabilities.value[idx])
-    })
-    surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
+    surveyStore.updateQuestionMatrix(props.question.index, props.question.rows)
+  } else {
+    // 其他题型：验证概率总和
+    const total = editedProbabilities.value.reduce((sum, p) => sum + Number(p), 0)
+    if (total !== 100) {
+      eventBus.emit('showToast', { message: '概率总和必须等于100', type: 'warning' })
+      return
+    }
+
+    if (props.question.options) {
+      props.question.options.forEach((option, idx) => {
+        option.probability = Number(editedProbabilities.value[idx])
+      })
+      surveyStore.updateQuestionOptions(props.question.index, props.question.options)
+    } else if (props.question.selectOptions) {
+      props.question.selectOptions.forEach((option, idx) => {
+        option.probability = Number(editedProbabilities.value[idx])
+      })
+      surveyStore.updateQuestionSelectOptions(props.question.index, props.question.selectOptions, props.question.selectedValue || '')
+    } else if (props.question.scaleOptions) {
+      props.question.scaleOptions.forEach((option, idx) => {
+        option.probability = Number(editedProbabilities.value[idx])
+      })
+      surveyStore.updateQuestionScaleOptions(props.question.index, props.question.scaleOptions)
+    } else if (props.question.textareaInputs) {
+      props.question.textareaInputs.forEach((input, idx) => {
+        input.probability = Number(editedProbabilities.value[idx])
+      })
+      surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
+    }
   }
 
   surveyStore.saveData()
@@ -688,6 +907,7 @@ const saveProbability = () => {
 const cancelEditProbability = () => {
   isEditingProbability.value = false
 }
+
 
 const getQuestionTypeLabel = (type: string): string => {
   switch (type) {
