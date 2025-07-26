@@ -37,16 +37,19 @@
         </div>
       </div>
       <div v-if="surveyStore.isAdvancedMode" class="flex items-center space-x-1">
-        <button @click="randomizeQuestion" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">随机</button>
+        <button v-if="shouldShowRandomButton" @click="randomizeQuestion" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">
+          随机
+        </button>
         <template
           v-if="
-            question.type === 'radio' ||
-            question.type === 'checkbox' ||
-            question.type === 'select' ||
-            question.type === 'scale' ||
-            question.type === 'textarea' ||
-            question.type === 'matrix' ||
-            question.type === 'matrix-multiple'
+            shouldShowEditProbabilityButton &&
+            (question.type === 'radio' ||
+              question.type === 'checkbox' ||
+              question.type === 'select' ||
+              question.type === 'scale' ||
+              question.type === 'textarea' ||
+              question.type === 'matrix' ||
+              question.type === 'matrix-multiple')
           "
         >
           <template v-if="!isEditingProbability">
@@ -170,10 +173,7 @@
           <tr v-for="row in question.rows" :key="row.title">
             <td class="w-1/4 whitespace-nowrap px-4 py-2 font-medium text-gray-900">{{ row.title }}</td>
             <td v-for="(option, index) in row.options" :key="index" class="cursor-pointer whitespace-nowrap px-2 py-2 text-center">
-              <div 
-                class="flex items-center justify-center rounded-md px-2 py-1 transition-colors duration-200"
-                :style="getMatrixProbabilityStyle(row, option)"
-              >
+              <div class="flex items-center justify-center rounded-md px-2 py-1 transition-colors duration-200" :style="getMatrixProbabilityStyle(row, option)">
                 <input
                   :type="question.type === 'matrix' ? 'radio' : 'checkbox'"
                   :name="row.title"
@@ -346,19 +346,16 @@
     </div>
 
     <!-- Sticky 保存按钮区域 -->
-    <div 
-      v-if="surveyStore.isAdvancedMode && isEditingProbability" 
-      class="sticky bottom-4 mt-6 flex justify-center"
-    >
+    <div v-if="surveyStore.isAdvancedMode && isEditingProbability" class="sticky bottom-4 mt-6 flex justify-center">
       <div class="flex space-x-2 rounded-lg bg-white px-4 py-2 shadow-lg ring-1 ring-black ring-opacity-5">
-        <button 
-          @click="saveProbability" 
+        <button
+          @click="saveProbability"
           class="rounded bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           保存概率设置
         </button>
-        <button 
-          @click="cancelEditProbability" 
+        <button
+          @click="cancelEditProbability"
           class="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
         >
           取消
@@ -546,16 +543,48 @@ const hasInputOptions = computed(() => {
   return props.question.options?.some(option => option.hasInput) || false
 })
 
+// 判断是否应该显示随机按钮
+const shouldShowRandomButton = computed(() => {
+  if (props.question.type === 'radio' || props.question.type === 'checkbox') {
+    return (props.question.options?.length || 0) > 1
+  } else if (props.question.type === 'matrix' || props.question.type === 'matrix-multiple') {
+    return (props.question.rows?.length || 0) > 0 && (props.question.rows?.[0]?.options?.length || 0) > 1
+  } else if (props.question.type === 'select') {
+    return (props.question.selectOptions?.length || 0) > 1
+  } else if (props.question.type === 'scale') {
+    return (props.question.scaleOptions?.length || 0) > 1
+  } else if (props.question.type === 'textarea') {
+    return (props.question.textareaInputs?.length || 0) > 1
+  }
+  return true
+})
+
+// 判断是否应该显示编辑概率按钮
+const shouldShowEditProbabilityButton = computed(() => {
+  if (props.question.type === 'radio' || props.question.type === 'checkbox') {
+    return (props.question.options?.length || 0) > 1
+  } else if (props.question.type === 'matrix' || props.question.type === 'matrix-multiple') {
+    return (props.question.rows?.length || 0) > 0 && (props.question.rows?.[0]?.options?.length || 0) > 1
+  } else if (props.question.type === 'select') {
+    return (props.question.selectOptions?.length || 0) > 1
+  } else if (props.question.type === 'scale') {
+    return (props.question.scaleOptions?.length || 0) > 1
+  } else if (props.question.type === 'textarea') {
+    return (props.question.textareaInputs?.length || 0) > 1
+  }
+  return true
+})
+
 // 为矩阵题创建扁平化选项（用于概率编辑器）
 const flattenedMatrixOptions = computed(() => {
   if (!props.question.rows) return []
-  return props.question.rows.flatMap(row => 
+  return props.question.rows.flatMap(row =>
     row.options.map((option, optionIndex) => ({
       value: optionIndex + 1,
       label: `选项${optionIndex + 1}`,
       probability: option.probability,
-      isSelected: option.isSelected
-    }))
+      isSelected: option.isSelected,
+    })),
   )
 })
 
@@ -808,7 +837,7 @@ const handleUpdateProbability = (data: { index: number; value: number }) => {
 // 矩阵题专用处理函数
 const handleMatrixApplyPreset = (type: DistributionType) => {
   if (!props.question.rows) return
-  
+
   props.question.rows.forEach((row, rowIndex) => {
     const probabilities = calculatePresetDistribution(type, row.options.length)
     if (!editedMatrixProbabilities.value[rowIndex]) {
@@ -822,14 +851,9 @@ const handleMatrixApplyPreset = (type: DistributionType) => {
 
 const handleMatrixApplyRange = () => {
   if (!props.question.rows || selectedRange.value.weight <= 0 || selectedRange.value.weight > 100) return
-  
+
   props.question.rows.forEach((row, rowIndex) => {
-    const probabilities = calculateRangeDistribution(
-      selectedRange.value.start,
-      selectedRange.value.end,
-      selectedRange.value.weight,
-      row.options.length
-    )
+    const probabilities = calculateRangeDistribution(selectedRange.value.start, selectedRange.value.end, selectedRange.value.weight, row.options.length)
     if (!editedMatrixProbabilities.value[rowIndex]) {
       editedMatrixProbabilities.value[rowIndex] = []
     }
@@ -907,7 +931,6 @@ const saveProbability = () => {
 const cancelEditProbability = () => {
   isEditingProbability.value = false
 }
-
 
 const getQuestionTypeLabel = (type: string): string => {
   switch (type) {
