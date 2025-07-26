@@ -13,7 +13,7 @@ export type DistributionType = 'normal' | 'left-skew' | 'right-skew' | 'uniform'
  */
 export const calculatePresetDistribution = (type: DistributionType, optionsCount: number): number[] => {
   let probabilities: number[] = []
-  
+
   switch (type) {
     case 'normal': // 正态分布（中间高）
       const middle = Math.floor(optionsCount / 2)
@@ -23,28 +23,26 @@ export const calculatePresetDistribution = (type: DistributionType, optionsCount
         return Math.max(5, Math.round(30 * Math.exp(-Math.pow(distance / (maxDistance / 2), 2))))
       })
       break
-      
+
     case 'left-skew': // 左偏分布（低分多）
       probabilities = Array.from({ length: optionsCount }, (_, index) => {
         return Math.max(5, Math.round(40 * Math.exp(-index / (optionsCount / 3))))
       })
       break
-      
+
     case 'right-skew': // 右偏分布（高分多）
       probabilities = Array.from({ length: optionsCount }, (_, index) => {
         return Math.max(5, Math.round(40 * Math.exp(-(optionsCount - index - 1) / (optionsCount / 3))))
       })
       break
-      
+
     case 'uniform': // 均匀分布
       const baseProb = Math.floor(100 / optionsCount)
       const remainder = 100 - baseProb * optionsCount
-      probabilities = Array.from({ length: optionsCount }, (_, index) => 
-        baseProb + (index < remainder ? 1 : 0)
-      )
+      probabilities = Array.from({ length: optionsCount }, (_, index) => baseProb + (index < remainder ? 1 : 0))
       break
   }
-  
+
   return normalizeProbabilities(probabilities)
 }
 
@@ -56,23 +54,18 @@ export const calculatePresetDistribution = (type: DistributionType, optionsCount
  * @param optionsCount 总选项数
  * @returns 概率数组
  */
-export const calculateRangeDistribution = (
-  startIndex: number, 
-  endIndex: number, 
-  rangeWeight: number, 
-  optionsCount: number
-): number[] => {
+export const calculateRangeDistribution = (startIndex: number, endIndex: number, rangeWeight: number, optionsCount: number): number[] => {
   const probabilities = new Array(optionsCount).fill(0)
   const rangeSize = endIndex - startIndex + 1
   const remainingWeight = 100 - rangeWeight
   const outsideCount = optionsCount - rangeSize
-  
+
   // 区间内平均分配权重
   const weightPerRange = rangeWeight / rangeSize
   for (let i = startIndex; i <= endIndex; i++) {
     probabilities[i] = Math.round(weightPerRange)
   }
-  
+
   // 区间外平均分配剩余权重
   if (outsideCount > 0) {
     const weightPerOutside = remainingWeight / outsideCount
@@ -82,22 +75,65 @@ export const calculateRangeDistribution = (
       }
     }
   }
-  
+
   return normalizeProbabilities(probabilities)
 }
 
 /**
- * 标准化概率数组，确保总和为100
+ * 标准化概率数组，确保总和为100且没有负数
  * @param probabilities 概率数组
  * @returns 标准化后的概率数组
  */
 export const normalizeProbabilities = (probabilities: number[]): number[] => {
-  const total = probabilities.reduce((sum, p) => sum + p, 0)
+  if (probabilities.length === 0) return []
+
+  // 确保所有概率都不是负数
+  const nonNegativeProbabilities = probabilities.map(p => Math.max(0, p))
+
+  const total = nonNegativeProbabilities.reduce((sum, p) => sum + p, 0)
+
+  if (total === 0) {
+    // 如果所有概率都是0，平均分配
+    const averageProb = Math.floor(100 / probabilities.length)
+    const remainder = 100 - averageProb * probabilities.length
+    return probabilities.map((_, index) => averageProb + (index < remainder ? 1 : 0))
+  }
+
   if (total !== 100) {
     const diff = 100 - total
-    probabilities[probabilities.length - 1] += diff
+
+    if (diff > 0) {
+      // 总和小于100，将差值分配给概率最大的元素
+      const maxIndex = nonNegativeProbabilities.indexOf(Math.max(...nonNegativeProbabilities))
+      nonNegativeProbabilities[maxIndex] += diff
+    } else {
+      // 总和大于100，按比例缩减所有概率
+      const scaleFactor = 100 / total
+      for (let i = 0; i < nonNegativeProbabilities.length; i++) {
+        nonNegativeProbabilities[i] = Math.round(nonNegativeProbabilities[i] * scaleFactor)
+      }
+
+      // 再次检查并调整，确保总和为100
+      const newTotal = nonNegativeProbabilities.reduce((sum, p) => sum + p, 0)
+      const finalDiff = 100 - newTotal
+      if (finalDiff !== 0) {
+        // 将剩余差值分配给概率最大的元素
+        const maxIndex = nonNegativeProbabilities.indexOf(Math.max(...nonNegativeProbabilities))
+        nonNegativeProbabilities[maxIndex] += finalDiff
+      }
+    }
   }
-  return probabilities
+
+  // 最后再次确保没有负数（防护措施）
+  const result = nonNegativeProbabilities.map(p => Math.max(0, p))
+
+  // 验证总和
+  const finalTotal = result.reduce((sum, p) => sum + p, 0)
+  if (finalTotal !== 100) {
+    console.warn('概率总和不等于100:', finalTotal, result)
+  }
+
+  return result
 }
 
 /**
