@@ -7,7 +7,7 @@
         <select 
           :value="selectedRange.start" 
           @change="updateRange('start', Number(($event.target as HTMLSelectElement).value))"
-          class="w-full rounded border-gray-300 text-xs"
+          class="w-full rounded-md border border-gray-300 p-2 text-xs hover:border-blue-500 focus:outline-[#2534DE]"
         >
           <option v-for="(option, idx) in options" :key="idx" :value="idx">
             选项 {{ option.value }}
@@ -19,7 +19,7 @@
         <select 
           :value="selectedRange.end" 
           @change="updateRange('end', Number(($event.target as HTMLSelectElement).value))"
-          class="w-full rounded border-gray-300 text-xs"
+          class="w-full rounded-md border border-gray-300 p-2 text-xs hover:border-blue-500 focus:outline-[#2534DE]"
         >
           <option 
             v-for="(option, idx) in options" 
