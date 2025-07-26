@@ -85,6 +85,16 @@ export const useSurveyStore = defineStore('survey', () => {
             parsedQuestion.selectOptions = existingQuestion.selectOptions
             parsedQuestion.selectedValue = existingQuestion.selectedValue
           }
+          // 更新量表问题状态
+          if (existingQuestion.type === 'scale' && parsedQuestion.type === 'scale') {
+            if (existingQuestion.scaleOptions && parsedQuestion.scaleOptions) {
+              parsedQuestion.scaleOptions = parsedQuestion.scaleOptions.map((option, optionIndex) => ({
+                ...option,
+                isSelected: existingQuestion.scaleOptions?.[optionIndex]?.isSelected ?? false,
+                probability: existingQuestion.scaleOptions?.[optionIndex]?.probability ?? option.probability,
+              }))
+            }
+          }
         }
         return parsedQuestion || existingQuestion
       })

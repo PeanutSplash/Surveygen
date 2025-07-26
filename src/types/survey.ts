@@ -18,6 +18,7 @@ export interface ScaleOption {
   value: number
   label: string
   isSelected: boolean
+  probability: number
 }
 
 export interface Question {

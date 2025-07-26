@@ -7,36 +7,44 @@
         <span :class="['rounded-md px-2 py-1 text-xs font-medium tracking-wide', getQuestionTypeClass(question.type)]">
           {{ getQuestionTypeLabel(question.type) }}
         </span>
+        <!-- 量表题概率提示图标 -->
+        <div v-if="surveyStore.isAdvancedMode && question.type === 'scale'" class="group relative">
+          <div class="flex h-4 w-4 cursor-help items-center justify-center text-gray-400 hover:text-gray-600">
+            <span class="text-xs">?</span>
+          </div>
+          <!-- Tooltip -->
+          <div
+            class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-64 -translate-x-1/2 transform rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg group-hover:block"
+          >
+            <div class="mb-2 text-center font-medium text-gray-200">概率视觉指南</div>
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-gray-300">低</span>
+              <div class="flex space-x-0">
+                <div class="h-2 w-3 bg-blue-300"></div>
+                <div class="h-2 w-3 bg-blue-400"></div>
+                <div class="h-2 w-3 bg-blue-500"></div>
+                <div class="h-2 w-3 bg-blue-600"></div>
+                <div class="h-2 w-3 bg-blue-700"></div>
+              </div>
+              <span class="text-gray-300">高</span>
+            </div>
+            <p class="text-center text-gray-300">按钮颜色深度表示选择该选项的概率高低</p>
+            <!-- Tooltip Arrow -->
+            <div class="absolute left-1/2 top-full -translate-x-1/2 transform">
+              <div class="border-4 border-transparent border-t-gray-900"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div v-if="surveyStore.isAdvancedMode" class="flex items-center space-x-2">
-        <button
-          @click="randomizeQuestion"
-          class="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
-        >
-          随机本题
-        </button>
-        <template v-if="question.type === 'radio' || question.type === 'checkbox' || question.type === 'select'">
+      <div v-if="surveyStore.isAdvancedMode" class="flex items-center space-x-1">
+        <button @click="randomizeQuestion" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">随机</button>
+        <template v-if="question.type === 'radio' || question.type === 'checkbox' || question.type === 'select' || question.type === 'scale'">
           <template v-if="!isEditingProbability">
-            <button
-              @click="startEditProbability"
-              class="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
-            >
-              编辑概率
-            </button>
+            <button @click="startEditProbability" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">编辑概率</button>
           </template>
           <template v-else>
-            <button
-              @click="saveProbability"
-              class="rounded-md bg-indigo-500 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-600"
-            >
-              保存
-            </button>
-            <button
-              @click="cancelEditProbability"
-              class="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
-            >
-              取消
-            </button>
+            <button @click="saveProbability" class="rounded bg-indigo-500 px-2 py-1 text-xs text-white hover:bg-indigo-600">保存</button>
+            <button @click="cancelEditProbability" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">取消</button>
           </template>
         </template>
       </div>
@@ -104,10 +112,11 @@
                     @click.stop
                     @input="updateOptionInput(index, inputIndex, $event)"
                   />
-                  <div class="flex gap-2">
+                  <!-- 选项概率编辑功能待实现 -->
+                  <!-- <div class="flex gap-2">
                     <p class="text-xs text-gray-500">选项概率:</p>
                     <CustomNumberInput v-model="test" class="w-16" />
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -129,7 +138,7 @@
         <div v-if="surveyStore.isAdvancedMode" class="mt-2 space-y-2">
           <label class="text-xs text-gray-500">概率：</label>
           <template v-if="isEditingProbability">
-            <CustomNumberInput v-model="editedProbabilities[index]" class="w-16" />
+            <CustomNumberInput v-model="editedProbabilities[index]" :min="0" :max="100" class="w-16" />
           </template>
           <template v-else>
             <span class="text-xs text-gray-700">{{ option.probability }}%</span>
@@ -210,10 +219,11 @@
                   class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 hover:border-blue-500 focus:outline-[#2534DE]"
                   @input="updateTextareaValue()"
                 />
-                <div class="flex gap-2 text-nowrap">
+                <!-- 文本题概率编辑功能待实现 -->
+                <!-- <div class="flex gap-2 text-nowrap">
                   <p class="text-xs text-gray-500">选项概率:</p>
                   <CustomNumberInput v-model="test" class="w-16" />
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
@@ -255,7 +265,7 @@
           <div class="flex items-center space-x-2">
             <span class="text-xs text-gray-500">概率：</span>
             <template v-if="isEditingProbability">
-              <CustomNumberInput v-model="editedProbabilities[idx]" class="w-20" inputClass="text-sm" />
+              <CustomNumberInput v-model="editedProbabilities[idx]" :min="0" :max="100" class="w-20" inputClass="text-sm" />
             </template>
             <template v-else>
               <span class="text-xs text-gray-700">{{ option.probability }}%</span>
@@ -266,37 +276,23 @@
     </div>
 
     <!-- 量表题 -->
-    <div v-else-if="question.type === 'scale'" class="mt-4">
-      <div class="mb-2 flex items-center justify-between">
-        <span class="text-sm text-gray-600">{{ question.minLabel }}</span>
-        <span class="text-sm text-gray-600">{{ question.maxLabel }}</span>
-      </div>
-      <div class="flex justify-between">
-        <button
-          v-for="option in question.scaleOptions"
-          :key="option.value"
-          @click="!surveyStore.isAdvancedMode && handleScaleOptionClick(option)"
-          :class="[
-            'h-8 w-8 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none',
-            surveyStore.isAdvancedMode
-              ? 'cursor-default bg-gray-200 text-gray-700'
-              : [isOptionSelected(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300', 'cursor-pointer'],
-          ]"
-        >
-          {{ option.value }}
-        </button>
-      </div>
-      <div v-if="surveyStore.isAdvancedMode" class="mt-4 space-y-2">
-        <div v-for="option in question.scaleOptions" :key="option.value" class="flex items-center justify-between rounded-md bg-gray-50 p-2">
-          <span class="text-sm text-gray-700">{{ option.value }}</span>
-          <div class="flex items-center space-x-2">
-            <span class="text-xs text-gray-500">概率：</span>
-            <CustomNumberInput v-model="test" class="w-20" inputClass="text-sm" />
-            <span class="text-xs text-gray-500">%</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ScaleQuestion
+      v-else-if="question.type === 'scale'"
+      :question="question"
+      :is-advanced-mode="surveyStore.isAdvancedMode"
+      :selected-scale-value="selectedScaleValue"
+      :is-editing-probability="isEditingProbability"
+      :probability-edit-mode="probabilityEditMode"
+      :selected-range="selectedRange"
+      :edited-probabilities="editedProbabilities"
+      :get-probability-style="getProbabilityStyle"
+      @option-click="handleScaleOptionClick"
+      @apply-preset="handleApplyPreset"
+      @apply-range="handleApplyRange"
+      @mode-change="probabilityEditMode = $event"
+      @update-selected-range="selectedRange = $event"
+      @update-probability="handleUpdateProbability"
+    />
 
     <!-- 未知题型 -->
     <div v-else class="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
@@ -316,9 +312,10 @@ import type { Question, MatrixRow, Option, ScaleOption } from '../types/survey'
 import { useSurveyStore } from '../stores/surveyStore'
 import CustomNumberInput from './CustomNumberInput.vue'
 import eventBus from '../utils/eventBus'
+import { calculatePresetDistribution, calculateRangeDistribution, type DistributionType } from '../utils/probabilityDistribution'
+import ScaleQuestion from './ScaleQuestion.vue'
+import type { RangeConfig } from './ProbabilityEditor.vue'
 
-const text = ref('')
-const test = ref('')
 const props = defineProps<{
   question: Question
 }>()
@@ -337,67 +334,65 @@ const selectedValue = computed({
 
 const selectedScaleValue = ref(0)
 
-const isOptionSelected = computed(() => (option: ScaleOption) => {
-  return option.value <= selectedScaleValue.value
-})
+// 根据概率计算颜色样式
+const getProbabilityStyle = (option: ScaleOption): Record<string, string> => {
+  if (!surveyStore.isAdvancedMode) {
+    return {
+      backgroundColor: '',
+      color: '',
+    }
+  }
+
+  const probability = option.probability || 0
+  const maxProbability = Math.max(...(props.question.scaleOptions?.map(o => o.probability || 0) || [0]))
+
+  if (probability === 0) {
+    return {
+      backgroundColor: '#f3f4f6', // gray-100
+      color: '#6b7280', // gray-500
+    }
+  }
+
+  // 根据概率计算颜色强度
+  const intensity = maxProbability > 0 ? probability / maxProbability : 0
+
+  // 使用蓝色渐变，从浅到深
+  if (intensity >= 0.8) {
+    return {
+      backgroundColor: '#1d4ed8', // blue-700
+      color: '#ffffff',
+    }
+  } else if (intensity >= 0.6) {
+    return {
+      backgroundColor: '#2563eb', // blue-600
+      color: '#ffffff',
+    }
+  } else if (intensity >= 0.4) {
+    return {
+      backgroundColor: '#3b82f6', // blue-500
+      color: '#ffffff',
+    }
+  } else if (intensity >= 0.2) {
+    return {
+      backgroundColor: '#60a5fa', // blue-400
+      color: '#ffffff',
+    }
+  } else {
+    return {
+      backgroundColor: '#93c5fd', // blue-300
+      color: '#1e40af', // blue-800
+    }
+  }
+}
 
 const isEditingProbability = ref(false)
 const editedProbabilities = ref<number[]>([])
+const probabilityEditMode = ref<'quick' | 'range' | 'manual'>('quick')
+const selectedRange = ref<RangeConfig>({ start: 0, end: 0, weight: 70 })
 
 const hasInputOptions = computed(() => {
   return props.question.options?.some(option => option.hasInput) || false
 })
-
-const updateProbability = (index: number) => {
-  if (!props.question.options) return
-
-  const options = props.question.options
-  let updatedOption = options[index]
-  updatedOption.probability = Math.max(0, Math.min(100, Math.round(Number(updatedOption.probability))))
-
-  let totalProbability = options.reduce((sum, option) => sum + Number(option.probability), 0)
-  let diff = 100 - totalProbability
-
-  if (diff !== 0) {
-    const otherOptions = options.filter((_, i) => i !== index)
-    let attempts = 0
-    const maxAttempts = 100 // 防止无限循环
-
-    while (diff !== 0 && attempts < maxAttempts) {
-      for (let option of otherOptions) {
-        if (diff > 0 && option.probability < 100) {
-          option.probability++
-          diff--
-        } else if (diff < 0 && option.probability > 0) {
-          option.probability--
-          diff++
-        }
-        if (diff === 0) break
-      }
-      attempts++
-    }
-
-    // 如果还有剩余差值，调整更新的选项
-    if (diff !== 0) {
-      updatedOption.probability = Math.max(0, Math.min(100, updatedOption.probability + diff))
-    }
-  }
-
-  // 确保所有概率都是非负整数
-  options.forEach(option => {
-    option.probability = Math.max(0, Math.round(Number(option.probability)))
-  })
-
-  // 最后检查并调整，确保总和为100
-  totalProbability = options.reduce((sum, option) => sum + Number(option.probability), 0)
-  if (totalProbability !== 100) {
-    const lastOption = options[options.length - 1]
-    lastOption.probability += 100 - totalProbability
-  }
-
-  surveyStore.updateQuestionOptions(props.question.index, options)
-  surveyStore.saveData()
-}
 
 let observer: MutationObserver | null = null
 
@@ -471,26 +466,6 @@ const handleSelectChange = (value: string) => {
   }
 }
 
-const updateSelectProbability = (updatedOption: Option) => {
-  if (props.question.selectOptions) {
-    let totalProbability = props.question.selectOptions.reduce(
-      (sum, option) => sum + (option === updatedOption ? updatedOption.probability : option.probability),
-      0,
-    )
-
-    if (totalProbability > 100) {
-      const excess = totalProbability - 100
-      props.question.selectOptions.forEach(option => {
-        if (option !== updatedOption) {
-          option.probability = Math.max(0, option.probability - excess / (props.question.selectOptions!.length - 1))
-        }
-      })
-    }
-
-    surveyStore.updateQuestion(props.question.index, props.question)
-  }
-}
-
 const handleScaleOptionClick = (clickedOption: ScaleOption) => {
   if (surveyStore.isAdvancedMode) return
   if (props.question.type === 'scale' && props.question.scaleOptions) {
@@ -558,23 +533,21 @@ const randomizeQuestion = () => {
   } else if (props.question.selectOptions) {
     randomizeOptions(props.question.selectOptions)
     if (isEditingProbability.value) {
-      editedProbabilities.value = props.question.selectOptions.map(
-        o => o.probability,
-      )
+      editedProbabilities.value = props.question.selectOptions.map(o => o.probability)
+    }
+  } else if (props.question.scaleOptions) {
+    randomizeOptions(props.question.scaleOptions)
+    if (isEditingProbability.value) {
+      editedProbabilities.value = props.question.scaleOptions.map(o => o.probability)
     }
   }
 
   if (props.question.options) {
-    surveyStore.updateQuestionOptions(
-      props.question.index,
-      props.question.options || [],
-    )
+    surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
   } else if (props.question.selectOptions) {
-    surveyStore.updateQuestionSelectOptions(
-      props.question.index,
-      props.question.selectOptions,
-      props.question.selectedValue || '',
-    )
+    surveyStore.updateQuestionSelectOptions(props.question.index, props.question.selectOptions, props.question.selectedValue || '')
+  } else if (props.question.scaleOptions) {
+    surveyStore.updateQuestionScaleOptions(props.question.index, props.question.scaleOptions)
   }
 }
 
@@ -597,8 +570,43 @@ const startEditProbability = () => {
     editedProbabilities.value = props.question.options.map(o => o.probability)
   } else if (props.question.selectOptions) {
     editedProbabilities.value = props.question.selectOptions.map(o => o.probability)
+  } else if (props.question.scaleOptions) {
+    editedProbabilities.value = props.question.scaleOptions.map(o => o.probability)
+    // 初始化区间设置
+    selectedRange.value = {
+      start: 0,
+      end: Math.max(0, props.question.scaleOptions.length - 1),
+      weight: 70,
+    }
   }
+  probabilityEditMode.value = 'quick'
   isEditingProbability.value = true
+}
+
+// 处理预设分布应用
+const handleApplyPreset = (type: DistributionType) => {
+  if (props.question.scaleOptions) {
+    const probabilities = calculatePresetDistribution(type, props.question.scaleOptions.length)
+    editedProbabilities.value = probabilities
+  }
+}
+
+// 处理区间设置应用
+const handleApplyRange = () => {
+  if (props.question.scaleOptions && selectedRange.value.weight > 0 && selectedRange.value.weight <= 100) {
+    const probabilities = calculateRangeDistribution(
+      selectedRange.value.start,
+      selectedRange.value.end,
+      selectedRange.value.weight,
+      props.question.scaleOptions.length,
+    )
+    editedProbabilities.value = probabilities
+  }
+}
+
+// 处理概率更新
+const handleUpdateProbability = (data: { index: number; value: number }) => {
+  editedProbabilities.value[data.index] = data.value
 }
 
 const saveProbability = () => {
@@ -617,11 +625,12 @@ const saveProbability = () => {
     props.question.selectOptions.forEach((option, idx) => {
       option.probability = Number(editedProbabilities.value[idx])
     })
-    surveyStore.updateQuestionSelectOptions(
-      props.question.index,
-      props.question.selectOptions,
-      props.question.selectedValue || '',
-    )
+    surveyStore.updateQuestionSelectOptions(props.question.index, props.question.selectOptions, props.question.selectedValue || '')
+  } else if (props.question.scaleOptions) {
+    props.question.scaleOptions.forEach((option, idx) => {
+      option.probability = Number(editedProbabilities.value[idx])
+    })
+    surveyStore.updateQuestionScaleOptions(props.question.index, props.question.scaleOptions)
   }
 
   surveyStore.saveData()

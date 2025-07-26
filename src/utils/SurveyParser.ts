@@ -249,23 +249,46 @@ const parseMatrixQuestion = (questionElement: Element) => {
  */
 const parseScaleQuestion = (questionElement: Element) => {
   const scaleOptions: ScaleOption[] = []
-  const allLiElements = questionElement.querySelectorAll('.div_table_radio_question li')
-  const liElements = Array.from(allLiElements)
 
-  // 获取最小值和最大值标签
-  const minLabel = liElements[0].querySelector('b')?.textContent?.trim() || ''
-  const maxLabel = liElements[liElements.length - 1].querySelector('b')?.textContent?.trim() || ''
+  // 获取标签元素（外层的标签）
+  const labelElements = questionElement.querySelectorAll('.notchoice b')
+  const minLabel = labelElements[0]?.textContent?.trim() || ''
+  const maxLabel = labelElements[1]?.textContent?.trim() || ''
+
+  // 获取实际的选项元素（.onscore 内的li元素）
+  const optionElements = questionElement.querySelectorAll('.onscore li')
+  const liElements = Array.from(optionElements)
 
   // 查找最后一个被选中的选项索引
-  const lastSelectedIndex = liElements.slice(1, -1).findLastIndex(li => Array.from(li.classList).some(className => className.includes('on')))
+  const lastSelectedIndex = liElements.findLastIndex(li => Array.from(li.classList).some(className => className.includes('on')))
 
-  // 处理中间选项
-  liElements.slice(1, -1).forEach((li, index) => {
-    const value = parseInt(li.getAttribute('value') || '0', 10)
-    const label = li.getAttribute('title') || `${index + 1}`
+  // 处理所有选项
+  liElements.forEach((li, index) => {
+    const value = parseInt(li.textContent?.trim() || '0', 10) // 使用显示的内容作为value（0-10）
+    const label = li.getAttribute('title') || li.textContent?.trim() || `${value}`
     const isSelected = index === lastSelectedIndex
-    scaleOptions.push({ value, label, isSelected })
+    scaleOptions.push({ value, label, isSelected, probability: isSelected ? 80 : 0 })
   })
+
+  // 为未选中的选项分配剩余概率
+  const unselectedOptions = scaleOptions.filter(option => !option.isSelected)
+  const selectedOptions = scaleOptions.filter(option => option.isSelected)
+
+  if (selectedOptions.length > 0) {
+    // 有选中选项时，未选中选项分配剩余20%的概率
+    if (unselectedOptions.length > 0) {
+      const remainingProbability = 20 / unselectedOptions.length
+      unselectedOptions.forEach(option => {
+        option.probability = remainingProbability
+      })
+    }
+  } else if (scaleOptions.length > 0) {
+    // 如果没有选中选项，平均分配概率
+    const probabilityPerOption = 100 / scaleOptions.length
+    scaleOptions.forEach(option => {
+      option.probability = probabilityPerOption
+    })
+  }
 
   return {
     scaleOptions,
