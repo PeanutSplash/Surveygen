@@ -67,10 +67,7 @@
     </div>
 
     <!-- 单选题和多选题 -->
-    <div
-      v-if="question.type === 'radio' || question.type === 'checkbox'"
-      :class="['mt-4', hasInputOptionsComputed ? 'space-y-4' : 'grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 space-y-0']"
-    >
+    <div v-if="question.type === 'radio' || question.type === 'checkbox'" :class="['mt-4', 'grid gap-3 space-y-0', getResponsiveGridClass]">
       <div
         v-for="(option, index) in question.options"
         :key="option.value"
@@ -389,6 +386,7 @@ import { shouldShowRandomButton, shouldShowEditProbabilityButton, hasInputOption
 import { useQuestionHandlers } from '../composables/useQuestionHandlers'
 import { useProbabilityEditor } from '../composables/useProbabilityEditor'
 import { useQuestionRandomizer } from '../composables/useQuestionRandomizer'
+import { useResponsiveContainer } from '../composables/useResponsiveContainer'
 
 const props = defineProps<{
   question: Question
@@ -469,6 +467,10 @@ const getMatrixProbabilityStyle = (row: any, option: any) => {
   )
 }
 
+// 使用响应式容器composable
+const { containerWidth, getGridColsClass, getBreakpoint } = useResponsiveContainer(questionRef)
+const getResponsiveGridClass = getGridColsClass()
+
 // 计算属性
 const hasInputOptionsComputed = computed(() => hasInputOptions(props.question))
 const shouldShowRandomButtonComputed = computed(() => shouldShowRandomButton(props.question))
@@ -499,6 +501,7 @@ onMounted(() => {
       textarea.addEventListener('input', () => updateTextareaValue())
     }
   }
+
   initializeSelectedValue()
 })
 
