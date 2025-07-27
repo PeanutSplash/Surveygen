@@ -304,17 +304,21 @@
       </select>
 
       <!-- 高级模式：概率设置 -->
-      <div v-if="surveyStore.isAdvancedMode" class="mt-4 space-y-2">
-        <div v-for="(option, idx) in question.selectOptions" :key="option.value" class="flex items-center justify-between rounded-md bg-gray-50 p-2">
-          <span class="text-sm text-gray-700">{{ option.text }}</span>
-          <div class="flex items-center space-x-2">
+      <div v-if="surveyStore.isAdvancedMode" :class="['mt-4', 'grid gap-3 space-y-0', getResponsiveGridClass]">
+        <div v-for="(option, idx) in question.selectOptions" :key="option.value" class="rounded-md bg-gray-50 p-3 transition-all duration-200 ease-in-out">
+          <div class="mb-2">
+            <span class="text-sm font-medium text-gray-700">{{ option.text }}</span>
+          </div>
+          <div class="flex items-center justify-between">
             <span class="text-xs text-gray-500">概率：</span>
-            <template v-if="isEditingProbability">
-              <CustomNumberInput v-model="editedProbabilities[idx]" :min="0" :max="100" class="w-20" inputClass="text-sm" />
-            </template>
-            <template v-else>
-              <span class="text-xs text-gray-700">{{ option.probability }}%</span>
-            </template>
+            <div class="flex-shrink-0">
+              <template v-if="isEditingProbability">
+                <CustomNumberInput v-model="editedProbabilities[idx]" :min="0" :max="100" class="w-16" inputClass="text-xs" />
+              </template>
+              <template v-else>
+                <span class="text-xs font-medium text-gray-700">{{ option.probability }}%</span>
+              </template>
+            </div>
           </div>
         </div>
       </div>
