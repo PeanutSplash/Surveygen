@@ -1,15 +1,19 @@
 <template>
   <div v-if="surveyStore.isVisible" class="pointer-events-none !fixed !inset-0 !z-[9999]">
     <vue-draggable-resizable
-      :w="600"
-      :h="400"
-      :x="20"
-      :y="20"
+      :w="windowState.width"
+      :h="windowState.height"
+      :x="windowState.x"
+      :y="windowState.y"
       :parent="false"
       :draggable="true"
       :resizable="true"
       :drag-handle="'.drag-handle'"
       class="!pointer-events-auto rounded-lg shadow-lg"
+      @dragging="onDragging"
+      @resizing="onResizing"
+      @dragstop="onDragStop"
+      @resizestop="onResizeStop"
     >
       <div class="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-[#fafafa]">
         <FloatingWindowHeader
@@ -57,6 +61,7 @@
           @toggle-auto-answer="toggleAutoAnswer"
           @randomize-all="randomizeAllQuestions"
           @reset-survey="resetSurvey"
+          @reset-window="resetWindowState"
         />
       </transition>
     </vue-draggable-resizable>
@@ -81,6 +86,90 @@ const surveyStore = useSurveyStore()
 const questionRefs = ref<{ [key: number]: any }>({})
 const scrollContainer = ref<HTMLElement | null>(null)
 const isRedirecting = ref(false)
+
+// 窗口状态管理
+const windowState = ref({
+  x: 20,
+  y: 20,
+  width: 600,
+  height: 400,
+})
+
+// 从本地存储加载窗口状态
+const loadWindowState = () => {
+  const saved = localStorage.getItem('floatingWindowState')
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved)
+      windowState.value = { ...windowState.value, ...parsed }
+    } catch (error) {
+      console.warn('Failed to parse saved window state:', error)
+    }
+  }
+}
+
+// 防抖保存函数
+let saveTimeout: ReturnType<typeof setTimeout> | null = null
+
+// 保存窗口状态到本地存储
+const saveWindowState = () => {
+  localStorage.setItem('floatingWindowState', JSON.stringify(windowState.value))
+}
+
+// 防抖保存窗口状态
+const debouncedSaveWindowState = () => {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout)
+  }
+  saveTimeout = setTimeout(() => {
+    saveWindowState()
+  }, 300) // 300ms 防抖
+}
+
+// 重置窗口状态到初始值
+const resetWindowState = () => {
+  windowState.value = {
+    x: 20,
+    y: 20,
+    width: 600,
+    height: 400,
+  }
+  saveWindowState()
+}
+
+// 拖拽事件处理
+const onDragging = (left: number, top: number) => {
+  windowState.value.x = left
+  windowState.value.y = top
+  // 在拖拽过程中使用防抖保存状态
+  debouncedSaveWindowState()
+}
+
+const onDragStop = (left: number, top: number) => {
+  windowState.value.x = left
+  windowState.value.y = top
+  // 拖拽结束立即保存
+  saveWindowState()
+}
+
+// 调整大小事件处理
+const onResizing = (left: number, top: number, width: number, height: number) => {
+  windowState.value.x = left
+  windowState.value.y = top
+  windowState.value.width = width
+  windowState.value.height = height
+  // 在调整大小过程中使用防抖保存状态
+  debouncedSaveWindowState()
+}
+
+const onResizeStop = (left: number, top: number, width: number, height: number) => {
+  windowState.value.x = left
+  windowState.value.y = top
+  windowState.value.width = width
+  windowState.value.height = height
+  // 调整大小结束立即保存
+  saveWindowState()
+}
 
 // 获取版本号
 const version = import.meta.env.VITE_APP_VERSION || '未知'
@@ -591,6 +680,9 @@ const handleManualSubmit = async () => {
 }
 
 onMounted(() => {
+  // 加载窗口状态
+  loadWindowState()
+
   // 解除禁用右键菜单和文本选择
   document.oncontextmenu = document.onselectstart = null
 
