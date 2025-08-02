@@ -71,6 +71,7 @@ import FloatingWindowHeader from './FloatingWindowHeader.vue'
 import { useSurveyStore } from '../stores/surveyStore'
 import { useSurveyObserver } from '../composables/useSurveyObserver'
 import { simulateHumanClick, simulateSliderVerification } from '../utils/humanSimulation'
+import { selectByProbability, selectMultipleByProbability } from '../utils/randomizationHelpers'
 import { ArrowPathRoundedSquareIcon } from '@heroicons/vue/24/solid'
 import eventBus from '../utils/eventBus'
 import SettingsPanel from './SettingsPanel.vue'
@@ -350,15 +351,31 @@ const fillSurveyAnswers = async (): Promise<boolean> => {
 
 // 处理单选题和多选题
 const handleOptionsQuestion = (questionElement: Element, question: Question) => {
-  question.options?.forEach(option => {
-    if (!option.isSelected) return
+  if (!question.options || question.options.length === 0) return
 
+  // 根据概率选择选项
+  let selectedOptions: any[] = []
+
+  if (question.type === 'radio') {
+    // 单选题：根据概率选择一个选项
+    const selectedOption = selectByProbability(question.options)
+    if (selectedOption) {
+      selectedOptions = [selectedOption]
+    }
+  } else if (question.type === 'checkbox') {
+    // 多选题：根据概率选择多个选项
+    selectedOptions = selectMultipleByProbability(question.options)
+  }
+
+  // 点击选中的选项
+  selectedOptions.forEach(option => {
     const li = questionElement.querySelector(`li:has(input[value="${option.value}"])`) as HTMLLIElement
     if (!li) return
 
     const a = li.querySelector('a.jqCheckbox, a.jqRadio') as HTMLAnchorElement
     a?.click()
 
+    // 处理选项的输入框
     if (option.hasInput && option.inputs && option.inputs.length > 0) {
       console.log(JSON.parse(JSON.stringify(option)))
       const inputValue = option.inputs[0].value
@@ -403,8 +420,15 @@ const handleMatrixQuestion = (questionElement: Element, question: Question) => {
 const handleTextareaQuestion = (question: Question) => {
   const textareaElement = document.getElementById(question.textareaId!) as HTMLTextAreaElement
   if (textareaElement) {
-    if (surveyStore.isAdvancedMode && question.textareaInputs) {
-      textareaElement.value = question.textareaInputs.map(input => input.value).join('\n')
+    if (surveyStore.isAdvancedMode && question.textareaInputs && question.textareaInputs.length > 0) {
+      // 根据概率选择文本答案
+      const selectedInputs = selectMultipleByProbability(question.textareaInputs)
+      if (selectedInputs.length > 0) {
+        textareaElement.value = selectedInputs.map(input => input.value).join('\n')
+      } else {
+        // 如果没有选中任何答案，使用第一个答案作为默认值
+        textareaElement.value = question.textareaInputs[0]?.value || ''
+      }
     } else {
       textareaElement.value = question.textareaValue || ''
     }
@@ -417,31 +441,36 @@ const handleTextareaQuestion = (question: Question) => {
 // 修改处理下拉框题的函数
 const handleSelectQuestion = (questionElement: Element, question: Question) => {
   const selectElement = questionElement.querySelector(`select[name="q${question.index}"]`) as HTMLSelectElement
-  if (selectElement) {
-    // 找到并选中对应的选项
-    selectElement.value = question.selectedValue!
+  if (selectElement && question.selectOptions && question.selectOptions.length > 0) {
+    // 根据概率选择下拉选项
+    const selectedOption = selectByProbability(question.selectOptions)
+    if (selectedOption) {
+      // 找到并选中对应的选项
+      selectElement.value = selectedOption.value
 
-    // 触发 change 事件，以确保任何相关的事件监听器都能被触发
-    const event = new Event('change', { bubbles: true })
-    selectElement.dispatchEvent(event)
+      // 触发 change 事件，以确保任何相关的事件监听器都能被触发
+      const event = new Event('change', { bubbles: true })
+      selectElement.dispatchEvent(event)
 
-    // 更新 Select2 的显示文本
-    // const select2Container = questionElement.querySelector('.select2-container') as HTMLElement
-    // if (select2Container) {
-    //   const selectedOption = selectElement.options[selectElement.selectedIndex]
-    //   const spanElement = select2Container.querySelector('.select2-selection__rendered') as HTMLElement
-    //   if (spanElement && selectedOption) {
-    //     spanElement.textContent = selectedOption.text
-    //     spanElement.setAttribute('title', selectedOption.text)
-    //   }
-    // }
+      // 更新 Select2 的显示文本
+      // const select2Container = questionElement.querySelector('.select2-container') as HTMLElement
+      // if (select2Container) {
+      //   const selectedOption = selectElement.options[selectElement.selectedIndex]
+      //   const spanElement = select2Container.querySelector('.select2-selection__rendered') as HTMLElement
+      //   if (spanElement && selectedOption) {
+      //     spanElement.textContent = selectedOption.text
+      //     spanElement.setAttribute('title', selectedOption.text)
+      //   }
+      // }
+    }
   }
 }
 
 // 处理量表题
 const handleScaleQuestion = (questionElement: Element, question: Question) => {
-  if (question.scaleOptions) {
-    const selectedOption = question.scaleOptions.find((option: ScaleOption) => option.isSelected)
+  if (question.scaleOptions && question.scaleOptions.length > 0) {
+    // 根据概率选择量表选项
+    const selectedOption = selectByProbability(question.scaleOptions)
     if (selectedOption) {
       const liElement = questionElement.querySelector(`li[value="${selectedOption.value}"]`) as HTMLLIElement
       if (liElement) {
