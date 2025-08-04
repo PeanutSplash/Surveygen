@@ -123,24 +123,13 @@ const clearRowProbability = (rowIndex: number) => {
 
 // 为概率列表计算颜色样式（优先使用编辑中的值）
 const getProbabilityStyleForRow = (rowIndex: number, optionIndex: number, option: Option): Record<string, string> => {
-  // 获取当前概率值：编辑模式下且非精确调整时使用编辑中的值
-  let probability = option.probability || 0
-  if (props.isEditing && props.editMode !== 'manual') {
-    const editedRowProbabilities = props.editedProbabilities[rowIndex]
-    if (editedRowProbabilities && editedRowProbabilities[optionIndex] !== undefined) {
-      probability = editedRowProbabilities[optionIndex]
-    }
-  }
+  // Use the same logic as getCurrentProbability for consistency
+  const probability = getCurrentProbability(rowIndex, optionIndex, option)
 
-  // 获取该行内的最大概率用于计算相对强度
   const row = props.rows[rowIndex]
-  let maxProbabilityInRow: number
-  if (props.isEditing && props.editMode !== 'manual') {
-    const editedRowProbabilities = props.editedProbabilities[rowIndex] || []
-    maxProbabilityInRow = Math.max(...editedRowProbabilities.filter(p => p !== undefined && p !== null))
-  } else {
-    maxProbabilityInRow = Math.max(...row.options.map(o => o.probability || 0))
-  }
+  // Calculate max probability for the row using consistent logic
+  const rowProbabilities = row.options.map((opt, idx) => getCurrentProbability(rowIndex, idx, opt))
+  const maxProbabilityInRow = Math.max(0, ...rowProbabilities) // Ensure at least 0
 
   if (probability === 0) {
     return {

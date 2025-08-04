@@ -19,8 +19,9 @@ export const calculatePresetDistribution = (type: DistributionType, optionsCount
       const middle = Math.floor(optionsCount / 2)
       probabilities = Array.from({ length: optionsCount }, (_, index) => {
         const distance = Math.abs(index - middle)
-        const maxDistance = Math.max(middle, optionsCount - middle - 1)
-        return Math.max(5, Math.round(30 * Math.exp(-Math.pow(distance / (maxDistance / 2), 2))))
+        const sigma = optionsCount / 6 // Standard deviation ≈ 1/6 of the full range
+        const normalValue = Math.exp(-0.5 * Math.pow(distance / sigma, 2))
+        return Math.round((normalValue * 100) / optionsCount) // initial weight; will be normalized below
       })
       break
 
@@ -55,6 +56,17 @@ export const calculatePresetDistribution = (type: DistributionType, optionsCount
  * @returns 概率数组
  */
 export const calculateRangeDistribution = (startIndex: number, endIndex: number, rangeWeight: number, optionsCount: number): number[] => {
+  // Input validation
+  if (startIndex < 0 || endIndex >= optionsCount || startIndex > endIndex) {
+    throw new Error('Invalid range indices')
+  }
+  if (rangeWeight < 0 || rangeWeight > 100) {
+    throw new Error('Range weight must be between 0 and 100')
+  }
+  if (optionsCount <= 0) {
+    throw new Error('Options count must be positive')
+  }
+
   const probabilities = new Array(optionsCount).fill(0)
   const rangeSize = endIndex - startIndex + 1
   const remainingWeight = 100 - rangeWeight

@@ -100,9 +100,13 @@ export const useQuestionHandlers = (question: Ref<Question>) => {
 
   const updateOptionInput = (optionIndex: number, inputIndex: number, event: Event) => {
     const inputValue = (event.target as HTMLInputElement).value
-    if (question.value.options) {
-      // @ts-ignore
-      question.value.options[optionIndex].inputs[inputIndex].value = inputValue
+    if (
+      question.value.options &&
+      optionIndex < question.value.options.length &&
+      question.value.options[optionIndex].inputs &&
+      inputIndex < question.value.options[optionIndex].inputs!.length
+    ) {
+      question.value.options[optionIndex].inputs![inputIndex].value = inputValue
       surveyStore.updateQuestionOptions(question.value.index, question.value.options)
     }
   }

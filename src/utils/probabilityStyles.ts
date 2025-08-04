@@ -33,11 +33,11 @@ export const calculateProbabilityStyle = (
   // 获取最大概率用于计算相对强度
   let maxProbability: number
   if (isEditingProbability && probabilityEditMode !== 'manual') {
-    maxProbability = Math.max(...editedProbabilities.filter(p => p !== undefined))
+    const valid = editedProbabilities.filter(p => p !== undefined && p !== null) as number[]
+    maxProbability = valid.length ? Math.max(...valid) : 0
   } else {
     maxProbability = Math.max(...(scaleOptions?.map(o => o.probability || 0) || [0]))
   }
-
   if (probability === 0) {
     return {
       backgroundColor: '#f3f4f6', // gray-100
@@ -116,7 +116,8 @@ export const calculateMatrixProbabilityStyle = (
   let maxProbabilityInRow: number
   if (isEditingProbability && probabilityEditMode !== 'manual') {
     const editedRowProbabilities = editedMatrixProbabilities[rowIndex] || []
-    maxProbabilityInRow = Math.max(...editedRowProbabilities.filter(p => p !== undefined && p !== null))
+    const valid = editedRowProbabilities.filter(p => p !== undefined && p !== null) as number[]
+    maxProbabilityInRow = valid.length ? Math.max(...valid) : 0
   } else {
     maxProbabilityInRow = Math.max(...row.options.map(o => o.probability || 0))
   }
