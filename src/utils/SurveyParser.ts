@@ -190,7 +190,7 @@ const parseTextAreaQuestion = (questionElement: Element) => {
   return {
     textareaValue,
     textareaId: textarea?.id || '',
-    textareaInputs: [{ value: textareaValue }],
+    textareaInputs: [{ value: textareaValue, probability: 100 }],
   }
 }
 
@@ -249,23 +249,74 @@ const parseMatrixQuestion = (questionElement: Element) => {
  */
 const parseScaleQuestion = (questionElement: Element) => {
   const scaleOptions: ScaleOption[] = []
-  const allLiElements = questionElement.querySelectorAll('.div_table_radio_question li')
-  const liElements = Array.from(allLiElements)
 
-  // 获取最小值和最大值标签
-  const minLabel = liElements[0].querySelector('b')?.textContent?.trim() || ''
-  const maxLabel = liElements[liElements.length - 1].querySelector('b')?.textContent?.trim() || ''
+  // 获取标签元素（外层的标签）
+  const labelElements = questionElement.querySelectorAll('.notchoice b')
+  const minLabel = labelElements[0]?.textContent?.trim() || ''
+  const maxLabel = labelElements[1]?.textContent?.trim() || ''
+
+  // 尝试解析两种不同的量表结构
+  let optionElements = questionElement.querySelectorAll('.onscore li')
+  let liElements = Array.from(optionElements)
+
+  // 如果没有找到 .onscore 结构，尝试新的结构 (.div_table_radio_question)
+  if (liElements.length === 0) {
+    const radioQuestion = questionElement.querySelector('.div_table_radio_question')
+    if (radioQuestion) {
+      // 获取所有具有 value 属性的 li 元素（排除 .notchoice）
+      optionElements = radioQuestion.querySelectorAll('li[value]')
+      liElements = Array.from(optionElements)
+    }
+  }
 
   // 查找最后一个被选中的选项索引
-  const lastSelectedIndex = liElements.slice(1, -1).findLastIndex(li => Array.from(li.classList).some(className => className.includes('on')))
-
-  // 处理中间选项
-  liElements.slice(1, -1).forEach((li, index) => {
-    const value = parseInt(li.getAttribute('value') || '0', 10)
-    const label = li.getAttribute('title') || `${index + 1}`
-    const isSelected = index === lastSelectedIndex
-    scaleOptions.push({ value, label, isSelected })
+  const lastSelectedIndex = liElements.findLastIndex(li => {
+    const classList = Array.from(li.classList)
+    // 检查是否包含 'on' 开头的类名（如 on2）或者包含 'on' 字符串
+    return classList.some(className => className.includes('on') && !className.includes('off'))
   })
+
+  // 处理所有选项
+  liElements.forEach((li, index) => {
+    const valueAttr = li.getAttribute('value')
+    const titleAttr = li.getAttribute('title')
+
+    let value: number
+    let label: string
+
+    if (valueAttr) {
+      // 新结构：使用 value 属性作为值
+      value = parseInt(valueAttr, 10)
+      label = titleAttr || valueAttr
+    } else {
+      // 旧结构：使用文本内容作为值
+      value = parseInt(li.textContent?.trim() || '0', 10)
+      label = li.getAttribute('title') || li.textContent?.trim() || `${value}`
+    }
+
+    const isSelected = index === lastSelectedIndex
+    scaleOptions.push({ value, label, isSelected, probability: isSelected ? 80 : 0 })
+  })
+
+  // 为未选中的选项分配剩余概率
+  const unselectedOptions = scaleOptions.filter(option => !option.isSelected)
+  const selectedOptions = scaleOptions.filter(option => option.isSelected)
+
+  if (selectedOptions.length > 0) {
+    // 有选中选项时，未选中选项分配剩余20%的概率
+    if (unselectedOptions.length > 0) {
+      const remainingProbability = 20 / unselectedOptions.length
+      unselectedOptions.forEach(option => {
+        option.probability = remainingProbability
+      })
+    }
+  } else if (scaleOptions.length > 0) {
+    // 如果没有选中选项，平均分配概率
+    const probabilityPerOption = 100 / scaleOptions.length
+    scaleOptions.forEach(option => {
+      option.probability = probabilityPerOption
+    })
+  }
 
   return {
     scaleOptions,

@@ -85,6 +85,16 @@ export const useSurveyStore = defineStore('survey', () => {
             parsedQuestion.selectOptions = existingQuestion.selectOptions
             parsedQuestion.selectedValue = existingQuestion.selectedValue
           }
+          // 更新量表问题状态
+          if (existingQuestion.type === 'scale' && parsedQuestion.type === 'scale') {
+            if (existingQuestion.scaleOptions && parsedQuestion.scaleOptions) {
+              parsedQuestion.scaleOptions = parsedQuestion.scaleOptions.map((option, optionIndex) => ({
+                ...option,
+                isSelected: existingQuestion.scaleOptions?.[optionIndex]?.isSelected ?? false,
+                probability: existingQuestion.scaleOptions?.[optionIndex]?.probability ?? option.probability,
+              }))
+            }
+          }
         }
         return parsedQuestion || existingQuestion
       })
@@ -162,17 +172,42 @@ export const useSurveyStore = defineStore('survey', () => {
 
       let isUnanswered = false
 
-      // 根据问题类型检查是否已回答
+      // 根据问题类型和模式检查是否已回答
       if (question.type === 'radio' || question.type === 'checkbox') {
-        isUnanswered = !question.options?.some(option => option.isSelected)
+        if (isAdvancedMode.value) {
+          // 高级模式下：只要有概率就算可以提交
+          isUnanswered = !question.options?.some(option => option.probability > 0)
+        } else {
+          // 普通模式下：必须有选中的选项
+          isUnanswered = !question.options?.some(option => option.isSelected)
+        }
       } else if (question.type === 'matrix' || question.type === 'matrix-multiple') {
-        isUnanswered = question.rows ? question.rows.some(row => !row.options.some(option => option.isSelected)) : true
+        if (isAdvancedMode.value) {
+          // 高级模式下：每行都需要有概率大于0的选项
+          isUnanswered = question.rows ? question.rows.some(row => !row.options.some(option => option.probability > 0)) : true
+        } else {
+          // 普通模式下：每行都需要有选中的选项
+          isUnanswered = question.rows ? question.rows.some(row => !row.options.some(option => option.isSelected)) : true
+        }
       } else if (question.type === 'textarea') {
+        // 文本题在任何模式下都需要有内容
         isUnanswered = !question.textareaValue || question.textareaValue.trim() === ''
       } else if (question.type === 'scale') {
-        isUnanswered = !question.scaleOptions?.some(option => option.isSelected)
+        if (isAdvancedMode.value) {
+          // 高级模式下：只要有概率就算可以提交
+          isUnanswered = !question.scaleOptions?.some(option => option.probability > 0)
+        } else {
+          // 普通模式下：必须有选中的选项
+          isUnanswered = !question.scaleOptions?.some(option => option.isSelected)
+        }
       } else if (question.type === 'select') {
-        isUnanswered = !question.selectedValue
+        if (isAdvancedMode.value) {
+          // 高级模式下：只要有概率就算可以提交
+          isUnanswered = !question.selectOptions?.some(option => option.probability > 0)
+        } else {
+          // 普通模式下：必须有选中的值
+          isUnanswered = !question.selectedValue
+        }
       }
 
       if (isUnanswered) {

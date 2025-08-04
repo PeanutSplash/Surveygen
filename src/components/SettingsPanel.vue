@@ -2,9 +2,27 @@
   <div ref="panelRef" class="absolute right-0 top-12 w-64 rounded-lg bg-white p-4 shadow-lg" @click="handlePanelClick">
     <div class="mb-4 flex items-center justify-between">
       <h3 class="text-lg font-semibold text-gray-800">设置</h3>
-      <button @click="closePanel" class="text-gray-500 transition-transform duration-700 ease-in-out hover:text-gray-700" :class="{ 'rotate-180': isClosing }">
-        <XMarkIcon class="h-5 w-5" />
-      </button>
+      <div class="flex items-center space-x-2">
+        <Tooltip text="恢复窗口初始大小和位置" :delay="200">
+          <button @click="$emit('reset-window')" class="text-gray-400 transition-colors duration-200 hover:text-gray-600">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </button>
+        </Tooltip>
+        <button
+          @click="closePanel"
+          class="text-gray-500 transition-transform duration-700 ease-in-out hover:text-gray-700"
+          :class="{ 'rotate-180': isClosing }"
+        >
+          <XMarkIcon class="h-5 w-5" />
+        </button>
+      </div>
     </div>
     <div class="space-y-4">
       <div class="flex items-center justify-between">
@@ -23,12 +41,14 @@
       >
         随机所有问题
       </button>
+
       <!-- <button
         @click="$emit('reset-survey')"
         class="w-full rounded-lg bg-green-500 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-teal-700"
       >
         重新解析问卷
       </button> -->
+
       <div class="mt-4 text-xs text-gray-500">
         <p>提示: 按下 F3 键可以快速显示/隐藏面板</p>
       </div>
@@ -58,6 +78,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/solid'
 import ToggleSwitch from './ToggleSwitch.vue'
+import Tooltip from './Tooltip.vue'
 import GithubIcon from '../assets/github.svg'
 import QQIcon from '../assets/qq.svg'
 
@@ -68,7 +89,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const emit = defineEmits(['close', 'toggle-mode', 'toggle-auto-answer', 'randomize-all', 'reset-survey'] as const)
+const emit = defineEmits(['close', 'toggle-mode', 'toggle-auto-answer', 'randomize-all', 'reset-survey', 'reset-window'] as const)
 
 const isClosing = ref(false)
 const panelRef = ref<HTMLElement | null>(null)

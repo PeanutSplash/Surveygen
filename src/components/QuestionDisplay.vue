@@ -7,21 +7,67 @@
         <span :class="['rounded-md px-2 py-1 text-xs font-medium tracking-wide', getQuestionTypeClass(question.type)]">
           {{ getQuestionTypeLabel(question.type) }}
         </span>
+        <!-- 量表题概率提示图标 -->
+        <div v-if="surveyStore.isAdvancedMode && question.type === 'scale'" class="group relative">
+          <div class="flex h-4 w-4 cursor-help items-center justify-center text-gray-400 hover:text-gray-600">
+            <span class="text-xs">?</span>
+          </div>
+          <!-- Tooltip -->
+          <div
+            class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-64 -translate-x-1/2 transform rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg group-hover:block"
+          >
+            <div class="mb-2 text-center font-medium text-gray-200">概率视觉指南</div>
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-gray-300">低</span>
+              <div class="flex space-x-0">
+                <div class="h-2 w-3 bg-blue-300"></div>
+                <div class="h-2 w-3 bg-blue-400"></div>
+                <div class="h-2 w-3 bg-blue-500"></div>
+                <div class="h-2 w-3 bg-blue-600"></div>
+                <div class="h-2 w-3 bg-blue-700"></div>
+              </div>
+              <span class="text-gray-300">高</span>
+            </div>
+            <p class="text-center text-gray-300">按钮颜色深度表示选择该选项的概率高低</p>
+            <!-- Tooltip Arrow -->
+            <div class="absolute left-1/2 top-full -translate-x-1/2 transform">
+              <div class="border-4 border-transparent border-t-gray-900"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <button
-        v-if="surveyStore.isAdvancedMode"
-        @click="randomizeQuestion"
-        class="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
-      >
-        随机本题
-      </button>
+      <div v-if="surveyStore.isAdvancedMode" class="flex items-center space-x-1">
+        <template
+          v-if="
+            shouldShowEditProbabilityButtonComputed &&
+            (question.type === 'radio' ||
+              question.type === 'checkbox' ||
+              question.type === 'select' ||
+              question.type === 'scale' ||
+              question.type === 'textarea' ||
+              question.type === 'matrix' ||
+              question.type === 'matrix-multiple')
+          "
+        >
+          <template v-if="!isEditingProbability">
+            <button @click="startEditProbability" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">编辑概率</button>
+          </template>
+          <template v-else>
+            <!-- 只有在编辑概率模式下才显示随机按钮 -->
+            <button
+              v-if="shouldShowRandomButtonComputed"
+              @click="randomizeQuestion"
+              class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200"
+            >
+              随机
+            </button>
+          </template>
+        </template>
+      </div>
     </div>
 
     <!-- 单选题和多选题 -->
-    <div
-      v-if="question.type === 'radio' || question.type === 'checkbox'"
-      :class="['mt-4', hasInputOptions ? 'space-y-4' : 'grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 space-y-0']"
-    >
+    <div v-if="question.type === 'radio' || question.type === 'checkbox'" :class="['mt-4', 'grid gap-3 space-y-0', getResponsiveGridClass]">
       <div
         v-for="(option, index) in question.options"
         :key="option.value"
@@ -79,10 +125,11 @@
                     @click.stop
                     @input="updateOptionInput(index, inputIndex, $event)"
                   />
-                  <div class="flex gap-2">
+                  <!-- 选项概率编辑功能待实现 -->
+                  <!-- <div class="flex gap-2">
                     <p class="text-xs text-gray-500">选项概率:</p>
                     <CustomNumberInput v-model="test" class="w-16" />
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -103,14 +150,18 @@
         <!-- 高级模式：概率设置 -->
         <div v-if="surveyStore.isAdvancedMode" class="mt-2 space-y-2">
           <label class="text-xs text-gray-500">概率：</label>
-          <CustomNumberInput v-model="option.probability" class="w-16" @input="updateProbability(index)" />
-          <!-- <span class="ml-1 text-xs text-gray-500">%</span> -->
+          <template v-if="isEditingProbability">
+            <CustomNumberInput v-model="editedProbabilities[index]" :min="0" :max="100" class="w-16" />
+          </template>
+          <template v-else>
+            <span class="text-xs text-gray-700">{{ option.probability }}%</span>
+          </template>
         </div>
       </div>
     </div>
 
     <!-- 矩阵题和矩阵多选题 -->
-    <div v-else-if="question.type === 'matrix' || question.type === 'matrix-multiple'" class="overflow-x-auto">
+    <div v-else-if="question.type === 'matrix' || question.type === 'matrix-multiple'" class="mt-4 space-y-4">
       <table class="min-w-full divide-y divide-gray-200 text-xs">
         <!-- 表头 -->
         <thead class="bg-gray-50">
@@ -125,8 +176,8 @@
         <tbody class="divide-y divide-gray-200 bg-[#fefefe]">
           <tr v-for="row in question.rows" :key="row.title">
             <td class="w-1/4 whitespace-nowrap px-4 py-2 font-medium text-gray-900">{{ row.title }}</td>
-            <td v-for="(option, index) in row.options" :key="index" class="cursor-pointer whitespace-nowrap px-4 py-2 text-center">
-              <div class="flex items-center justify-center">
+            <td v-for="(option, index) in row.options" :key="index" class="cursor-pointer whitespace-nowrap px-2 py-2 text-center">
+              <div class="flex items-center justify-center rounded-md px-2 py-1 transition-colors duration-200" :style="getMatrixProbabilityStyle(row, option)">
                 <input
                   :type="question.type === 'matrix' ? 'radio' : 'checkbox'"
                   :name="row.title"
@@ -136,17 +187,35 @@
                   :disabled="surveyStore.isAdvancedMode"
                 />
               </div>
-              <CustomNumberInput
-                v-if="surveyStore.isAdvancedMode && (question.type === 'matrix' || (question.type === 'matrix-multiple' && option.isSelected))"
-                :showArrows="false"
-                v-model="option.probability"
-                inputClass="text-[10px] !px-[2px] !py-1 text-center !rounded-md"
-                class="mx-auto mt-1 w-10"
-              />
             </td>
           </tr>
         </tbody>
       </table>
+
+      <!-- 高级模式概率管理 -->
+      <div v-if="surveyStore.isAdvancedMode" class="space-y-3">
+        <!-- 概率编辑器 -->
+        <ProbabilityEditor
+          v-if="isEditingProbability"
+          :mode="probabilityEditMode"
+          :options="flattenedMatrixOptions"
+          :selected-range="selectedRange"
+          @mode-change="probabilityEditMode = $event"
+          @update:selected-range="selectedRange = $event"
+          @apply-preset="handleMatrixApplyPreset"
+          @apply-range="handleMatrixApplyRange"
+        />
+
+        <!-- 矩阵概率列表 -->
+        <MatrixProbabilityList
+          :rows="question.rows || []"
+          :edited-probabilities="editedMatrixProbabilities"
+          :is-editing="isEditingProbability"
+          :edit-mode="probabilityEditMode"
+          :get-probability-style="getMatrixProbabilityStyle"
+          @update-probability="handleMatrixUpdateProbability"
+        />
+      </div>
     </div>
 
     <!-- 文本题 -->
@@ -181,34 +250,49 @@
                   class="my-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm leading-6 text-gray-900 hover:border-blue-500 focus:outline-[#2534DE]"
                   @input="updateTextareaValue()"
                 />
-                <div class="flex gap-2 text-nowrap">
-                  <p class="text-xs text-gray-500">选项概率:</p>
-                  <CustomNumberInput v-model="test" class="w-16" />
+                <!-- 文本题概率编辑 -->
+                <div v-if="surveyStore.isAdvancedMode" class="flex gap-2 text-nowrap">
+                  <p class="text-xs text-gray-500">概率:</p>
+                  <template v-if="isEditingProbability">
+                    <CustomNumberInput v-model="editedProbabilities[index]" :min="0" :max="100" class="w-16" />
+                  </template>
+                  <template v-else>
+                    <span class="text-xs text-gray-700">{{ input.probability || 0 }}%</span>
+                  </template>
                 </div>
               </div>
             </div>
           </div>
         </template>
-        <div class="mt-2 flex justify-between">
-          <button @click="addTextareaInput" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">
-            添加更多答案
-          </button>
-          <button
-            v-if="question.textareaInputs && question.textareaInputs.length > 1"
-            @click="removeTextareaInput(question.textareaInputs.length - 1)"
-            class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
-          >
-            删除
-          </button>
+        <div class="mt-2 space-y-2">
+          <!-- 快速填入选项 -->
+          <QuickFillButtons @fill="fillQuickText" />
+          <div class="flex justify-between">
+            <button @click="addTextareaInput" class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-100">
+              添加更多答案
+            </button>
+            <button
+              v-if="question.textareaInputs && question.textareaInputs.length > 1"
+              @click="removeTextareaInput(question.textareaInputs.length - 1)"
+              class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
+            >
+              删除
+            </button>
+          </div>
         </div>
       </template>
-      <input
-        v-else
-        v-model="question.textareaValue"
-        type="text"
-        class="w-full rounded-md border border-gray-300 p-2 hover:border-blue-500 focus:outline-[#2534DE]"
-        @input="updateTextareaValue"
-      />
+      <template v-else>
+        <input
+          v-model="question.textareaValue"
+          type="text"
+          class="w-full rounded-md border border-gray-300 p-2 hover:border-blue-500 focus:outline-[#2534DE]"
+          @input="updateTextareaValue"
+        />
+        <!-- 普通模式下的快速填入选项 -->
+        <div class="mt-2">
+          <QuickFillButtons @fill="fillQuickText" />
+        </div>
+      </template>
     </div>
 
     <!-- 下拉选择题 -->
@@ -220,50 +304,44 @@
       </select>
 
       <!-- 高级模式：概率设置 -->
-      <div v-if="surveyStore.isAdvancedMode" class="mt-4 space-y-2">
-        <div v-for="option in question.selectOptions" :key="option.value" class="flex items-center justify-between rounded-md bg-gray-50 p-2">
-          <span class="text-sm text-gray-700">{{ option.text }}</span>
-          <div class="flex items-center space-x-2">
+      <div v-if="surveyStore.isAdvancedMode" :class="['mt-4', 'grid gap-3 space-y-0', getResponsiveGridClass]">
+        <div v-for="(option, idx) in question.selectOptions" :key="option.value" class="rounded-md bg-gray-50 p-3 transition-all duration-200 ease-in-out">
+          <div class="mb-2">
+            <span class="text-sm font-medium text-gray-700">{{ option.text }}</span>
+          </div>
+          <div class="flex items-center justify-between">
             <span class="text-xs text-gray-500">概率：</span>
-            <CustomNumberInput v-model="option.probability" class="w-20" inputClass="text-sm" @input="updateSelectProbability(option)" />
-            <span class="text-xs text-gray-500">%</span>
+            <div class="flex-shrink-0">
+              <template v-if="isEditingProbability">
+                <CustomNumberInput v-model="editedProbabilities[idx]" :min="0" :max="100" class="w-16" inputClass="text-xs" />
+              </template>
+              <template v-else>
+                <span class="text-xs font-medium text-gray-700">{{ option.probability }}%</span>
+              </template>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 量表题 -->
-    <div v-else-if="question.type === 'scale'" class="mt-4">
-      <div class="mb-2 flex items-center justify-between">
-        <span class="text-sm text-gray-600">{{ question.minLabel }}</span>
-        <span class="text-sm text-gray-600">{{ question.maxLabel }}</span>
-      </div>
-      <div class="flex justify-between">
-        <button
-          v-for="option in question.scaleOptions"
-          :key="option.value"
-          @click="!surveyStore.isAdvancedMode && handleScaleOptionClick(option)"
-          :class="[
-            'h-8 w-8 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none',
-            surveyStore.isAdvancedMode
-              ? 'cursor-default bg-gray-200 text-gray-700'
-              : [isOptionSelected(option) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300', 'cursor-pointer'],
-          ]"
-        >
-          {{ option.value }}
-        </button>
-      </div>
-      <div v-if="surveyStore.isAdvancedMode" class="mt-4 space-y-2">
-        <div v-for="option in question.scaleOptions" :key="option.value" class="flex items-center justify-between rounded-md bg-gray-50 p-2">
-          <span class="text-sm text-gray-700">{{ option.value }}</span>
-          <div class="flex items-center space-x-2">
-            <span class="text-xs text-gray-500">概率：</span>
-            <CustomNumberInput v-model="test" class="w-20" inputClass="text-sm" />
-            <span class="text-xs text-gray-500">%</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ScaleQuestion
+      v-else-if="question.type === 'scale'"
+      :question="question"
+      :is-advanced-mode="surveyStore.isAdvancedMode"
+      :selected-scale-value="selectedScaleValue"
+      :is-editing-probability="isEditingProbability"
+      :probability-edit-mode="probabilityEditMode"
+      :selected-range="selectedRange"
+      :edited-probabilities="editedProbabilities"
+      :get-probability-style="getProbabilityStyle"
+      @option-click="handleScaleOptionClick"
+      @apply-preset="handleApplyPreset"
+      @apply-range="handleApplyRange"
+      @mode-change="probabilityEditMode = $event"
+      @update-selected-range="selectedRange = $event"
+      @update-probability="handleUpdateProbability"
+    />
 
     <!-- 未知题型 -->
     <div v-else class="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
@@ -274,199 +352,138 @@
         <div class="mt-2 max-h-40 overflow-auto rounded border border-yellow-200 bg-[#fefefe] p-2 text-xs text-gray-600" v-html="question.unknownContent"></div>
       </details>
     </div>
+
+    <!-- Sticky 保存按钮区域 -->
+    <div v-if="surveyStore.isAdvancedMode && isEditingProbability" class="sticky bottom-4 mt-6 flex justify-center">
+      <div class="flex space-x-2 rounded-lg bg-white px-4 py-2 shadow-lg ring-1 ring-black ring-opacity-5">
+        <button
+          @click="saveProbability"
+          class="rounded bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          保存概率设置
+        </button>
+        <button
+          @click="cancelEditProbability"
+          class="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          取消
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import type { Question, MatrixRow, Option, ScaleOption } from '../types/survey'
+import type { Question } from '../types/survey'
 import { useSurveyStore } from '../stores/surveyStore'
 import CustomNumberInput from './CustomNumberInput.vue'
+import ScaleQuestion from './ScaleQuestion.vue'
+import QuickFillButtons from './QuickFillButtons.vue'
+import ProbabilityEditor from './ProbabilityEditor.vue'
+import MatrixProbabilityList from './MatrixProbabilityList.vue'
 
-const text = ref('')
-const test = ref('')
+// 导入工具函数和 composables
+import { getQuestionTypeLabel, getQuestionTypeClass } from '../utils/questionTypeHelpers'
+import { calculateProbabilityStyle, calculateMatrixProbabilityStyle } from '../utils/probabilityStyles'
+import { shouldShowRandomButton, shouldShowEditProbabilityButton, hasInputOptions } from '../utils/questionValidators'
+import { useQuestionHandlers } from '../composables/useQuestionHandlers'
+import { useProbabilityEditor } from '../composables/useProbabilityEditor'
+import { useQuestionRandomizer } from '../composables/useQuestionRandomizer'
+import { useResponsiveContainer } from '../composables/useResponsiveContainer'
+
 const props = defineProps<{
   question: Question
 }>()
 
 const surveyStore = useSurveyStore()
-
 const questionRef = ref<HTMLElement | null>(null)
 const textareaValue = ref(props.question.textareaValue || '')
 
-const selectedValue = computed({
-  get: () => props.question.selectedValue || '',
-  set: (value: string) => {
-    handleSelectChange(value)
-  },
-})
+// 使用 composables
+const questionHandlers = useQuestionHandlers(ref(props.question))
+const probabilityEditor = useProbabilityEditor(ref(props.question))
+const questionRandomizer = useQuestionRandomizer(
+  ref(props.question),
+  probabilityEditor.isEditingProbability,
+  probabilityEditor.editedProbabilities,
+  probabilityEditor.editedMatrixProbabilities,
+)
 
-const selectedScaleValue = ref(0)
+// 从 composables 中解构需要的属性和方法
+const {
+  selectedScaleValue,
+  selectedValue,
+  handleOptionClick,
+  handleMatrixOptionClick,
+  handleSelectChange,
+  handleScaleOptionClick,
+  updateTextareaValue,
+  updateOptionInput,
+  addInput,
+  removeInput,
+  addTextareaInput,
+  removeTextareaInput,
+  fillQuickText,
+} = questionHandlers
 
-const isOptionSelected = computed(() => (option: ScaleOption) => {
-  return option.value <= selectedScaleValue.value
-})
+const {
+  isEditingProbability,
+  editedProbabilities,
+  editedMatrixProbabilities,
+  probabilityEditMode,
+  selectedRange,
+  flattenedMatrixOptions,
+  startEditProbability,
+  handleApplyPreset,
+  handleApplyRange,
+  handleUpdateProbability,
+  handleMatrixApplyPreset,
+  handleMatrixApplyRange,
+  handleMatrixUpdateProbability,
+  saveProbability,
+  cancelEditProbability,
+} = probabilityEditor
 
-const hasInputOptions = computed(() => {
-  return props.question.options?.some(option => option.hasInput) || false
-})
+const { randomizeQuestion } = questionRandomizer
 
-const updateProbability = (index: number) => {
-  if (!props.question.options) return
-
-  const options = props.question.options
-  let updatedOption = options[index]
-  updatedOption.probability = Math.max(0, Math.min(100, Math.round(Number(updatedOption.probability))))
-
-  let totalProbability = options.reduce((sum, option) => sum + Number(option.probability), 0)
-  let diff = 100 - totalProbability
-
-  if (diff !== 0) {
-    const otherOptions = options.filter((_, i) => i !== index)
-    let attempts = 0
-    const maxAttempts = 100 // 防止无限循环
-
-    while (diff !== 0 && attempts < maxAttempts) {
-      for (let option of otherOptions) {
-        if (diff > 0 && option.probability < 100) {
-          option.probability++
-          diff--
-        } else if (diff < 0 && option.probability > 0) {
-          option.probability--
-          diff++
-        }
-        if (diff === 0) break
-      }
-      attempts++
-    }
-
-    // 如果还有剩余差值，调整更新的选项
-    if (diff !== 0) {
-      updatedOption.probability = Math.max(0, Math.min(100, updatedOption.probability + diff))
-    }
-  }
-
-  // 确保所有概率都是非负整数
-  options.forEach(option => {
-    option.probability = Math.max(0, Math.round(Number(option.probability)))
-  })
-
-  // 最后检查并调整，确保总和为100
-  totalProbability = options.reduce((sum, option) => sum + Number(option.probability), 0)
-  if (totalProbability !== 100) {
-    const lastOption = options[options.length - 1]
-    lastOption.probability += 100 - totalProbability
-  }
-
-  surveyStore.updateQuestionOptions(props.question.index, options)
-  surveyStore.saveData()
+// 包装样式计算函数
+const getProbabilityStyle = (option: any) => {
+  return calculateProbabilityStyle(
+    option,
+    isEditingProbability.value,
+    probabilityEditMode.value,
+    editedProbabilities.value,
+    props.question.scaleOptions,
+    surveyStore.isAdvancedMode,
+  )
 }
+
+const getMatrixProbabilityStyle = (row: any, option: any) => {
+  return calculateMatrixProbabilityStyle(
+    row,
+    option,
+    props.question.rows,
+    isEditingProbability.value,
+    probabilityEditMode.value,
+    editedMatrixProbabilities.value,
+    surveyStore.isAdvancedMode,
+  )
+}
+
+// 使用响应式容器composable
+const { containerWidth, getGridColsClass, getBreakpoint } = useResponsiveContainer(questionRef)
+const getResponsiveGridClass = getGridColsClass()
+
+// 计算属性
+const hasInputOptionsComputed = computed(() => hasInputOptions(props.question))
+const shouldShowRandomButtonComputed = computed(() => shouldShowRandomButton(props.question))
+const shouldShowEditProbabilityButtonComputed = computed(() => shouldShowEditProbabilityButton(props.question))
 
 let observer: MutationObserver | null = null
 
-const updateTextareaValue = () => {
-  if (surveyStore.isAdvancedMode) {
-    if (props.question.textareaInputs) {
-      surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
-    }
-  } else {
-    surveyStore.updateQuestionTextarea(props.question.index, props.question.textareaValue || '')
-  }
-}
-
-const handleOptionClick = (optionText: string) => {
-  if (surveyStore.isAdvancedMode) return
-  if (props.question.type === 'radio') {
-    // 单选逻辑
-    props.question.options?.forEach(option => {
-      option.isSelected = option.text === optionText
-      if (option.hasInput) {
-        if (!option.isSelected) {
-          option.inputs = [{ value: '' }] // 重置未选中选项的输入值
-        } else if (!option.inputs || option.inputs.length === 0) {
-          option.inputs = [{ value: '' }] // 为新选中的选项初始化输入数组
-        }
-      }
-    })
-  } else if (props.question.type === 'checkbox') {
-    // 多选题逻辑
-    const option = props.question.options?.find(o => o.text === optionText)
-    if (option) {
-      option.isSelected = !option.isSelected
-      if (option.hasInput) {
-        if (!option.isSelected) {
-          option.inputs = [{ value: '' }] // 重置未选中选项的输入值
-        } else if (!option.inputs || option.inputs.length === 0) {
-          option.inputs = [{ value: '' }] // 为新选中的选项初始化输入数组
-        }
-      }
-    }
-  }
-
-  // 更新问题选项
-  surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
-}
-
-const handleMatrixOptionClick = (row: MatrixRow, clickedOption: Option) => {
-  if (surveyStore.isAdvancedMode) return
-  if (props.question.type === 'matrix') {
-    // 单选逻辑
-    row.options.forEach((option: Option) => {
-      option.isSelected = option === clickedOption
-    })
-  } else if (props.question.type === 'matrix-multiple') {
-    // 多选逻辑
-    clickedOption.isSelected = !clickedOption.isSelected
-  }
-  if (props.question.rows) {
-    surveyStore.updateQuestionMatrix(props.question.index, props.question.rows)
-  }
-}
-
-const handleSelectChange = (value: string) => {
-  if (props.question.selectOptions) {
-    props.question.selectOptions.forEach(option => {
-      option.isSelected = option.value === value
-      option.probability = option.isSelected ? 100 : 0
-    })
-    // 更新当前问题的数据
-    surveyStore.updateQuestionSelectOptions(props.question.index, props.question.selectOptions, value)
-  }
-}
-
-const updateSelectProbability = (updatedOption: Option) => {
-  if (props.question.selectOptions) {
-    let totalProbability = props.question.selectOptions.reduce(
-      (sum, option) => sum + (option === updatedOption ? updatedOption.probability : option.probability),
-      0,
-    )
-
-    if (totalProbability > 100) {
-      const excess = totalProbability - 100
-      props.question.selectOptions.forEach(option => {
-        if (option !== updatedOption) {
-          option.probability = Math.max(0, option.probability - excess / (props.question.selectOptions!.length - 1))
-        }
-      })
-    }
-
-    surveyStore.updateQuestion(props.question.index, props.question)
-  }
-}
-
-const handleScaleOptionClick = (clickedOption: ScaleOption) => {
-  if (surveyStore.isAdvancedMode) return
-  if (props.question.type === 'scale' && props.question.scaleOptions) {
-    selectedScaleValue.value = clickedOption.value
-    props.question.scaleOptions.forEach(option => {
-      option.isSelected = option.value === clickedOption.value
-    })
-    surveyStore.updateQuestionScaleOptions(props.question.index, props.question.scaleOptions)
-  }
-}
-
 // 初始化选中值
-// 在件挂载时或 props 变化时调用此函数
+// 在组件挂载时或 props 变化时调用此函数
 const initializeSelectedValue = () => {
   if (props.question.type === 'scale' && props.question.scaleOptions) {
     const maxSelectedOption = props.question.scaleOptions.reduce((max, option) => (option.isSelected && option.value > max ? option.value : max), 0)
@@ -488,6 +505,7 @@ onMounted(() => {
       textarea.addEventListener('input', () => updateTextareaValue())
     }
   }
+
   initializeSelectedValue()
 })
 
@@ -509,112 +527,6 @@ watch(
     textareaValue.value = newValue || ''
   },
 )
-
-const randomizeQuestion = () => {
-  if (props.question.options) {
-    randomizeOptions(props.question.options)
-  } else if (props.question.rows) {
-    props.question.rows.forEach(row => randomizeOptions(row.options))
-  }
-  surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
-}
-
-const randomizeOptions = (options: any[]) => {
-  const total = options.length
-  let remaining = 100
-  options.forEach((option, index) => {
-    if (index === total - 1) {
-      option.probability = remaining
-    } else {
-      const randomProb = Math.floor(Math.random() * (remaining - (total - index - 1))) + 1
-      option.probability = randomProb
-      remaining -= randomProb
-    }
-  })
-}
-
-const getQuestionTypeLabel = (type: string): string => {
-  switch (type) {
-    case 'radio':
-      return '单选题'
-    case 'checkbox':
-      return '多选题'
-    case 'matrix':
-      return '矩阵题'
-    case 'matrix-multiple':
-      return '矩阵多选题'
-    case 'textarea':
-      return '文本题'
-    case 'select':
-      return '下拉选择题'
-    case 'scale':
-      return '量表题'
-    default:
-      return '未知题型'
-  }
-}
-
-const getQuestionTypeClass = (type: string): string => {
-  switch (type) {
-    case 'radio':
-      return 'bg-blue-50 text-blue-600 border border-blue-200'
-    case 'checkbox':
-      return 'bg-green-50 text-green-600 border border-green-200'
-    case 'matrix':
-      return 'bg-purple-50 text-purple-600 border border-purple-200'
-    case 'matrix-multiple':
-      return 'bg-pink-50 text-pink-600 border border-pink-200'
-    case 'textarea':
-      return 'bg-yellow-50 text-yellow-600 border border-yellow-200'
-    case 'select':
-      return 'bg-indigo-50 text-indigo-600 border border-indigo-200'
-    case 'scale':
-      return 'bg-orange-50 text-orange-600 border border-orange-200'
-    default:
-      return 'bg-gray-50 text-gray-600 border border-gray-200'
-  }
-}
-
-const updateOptionInput = (optionIndex: number, inputIndex: number, event: Event) => {
-  const inputValue = (event.target as HTMLInputElement).value
-  if (props.question.options) {
-    // @ts-ignore
-    props.question.options[optionIndex].inputs[inputIndex].value = inputValue
-    surveyStore.updateQuestionOptions(props.question.index, props.question.options)
-  }
-}
-
-const addInput = (option: Option) => {
-  if (!surveyStore.isAdvancedMode) return // 在普通模式下禁止添加输入框
-  if (!option.inputs) {
-    option.inputs = []
-  }
-  option.inputs.push({ value: '' })
-  surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
-}
-
-const removeInput = (option: Option) => {
-  if ((option.inputs?.length ?? 0) > 1) {
-    option.inputs?.pop()
-    surveyStore.updateQuestionOptions(props.question.index, props.question.options || [])
-  }
-}
-
-const addTextareaInput = () => {
-  if (!props.question.textareaInputs) {
-    props.question.textareaInputs = [{ value: '' }]
-  } else {
-    props.question.textareaInputs.push({ value: '' })
-  }
-  surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
-}
-
-const removeTextareaInput = (index: number) => {
-  if (props.question.textareaInputs && props.question.textareaInputs.length > 1) {
-    props.question.textareaInputs.splice(index, 1)
-    surveyStore.updateQuestionTextareaInputs(props.question.index, props.question.textareaInputs)
-  }
-}
 
 defineExpose({ questionRef })
 </script>

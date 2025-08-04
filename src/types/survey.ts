@@ -18,6 +18,7 @@ export interface ScaleOption {
   value: number
   label: string
   isSelected: boolean
+  probability: number
 }
 
 export interface Question {
@@ -28,7 +29,7 @@ export interface Question {
   rows?: MatrixRow[]
   headers?: string[]
   textareaValue?: string
-  textareaInputs?: { value: string }[]
+  textareaInputs?: { value: string; probability?: number }[]
   textareaId?: string
   unknownContent?: string
   selectOptions?: Option[]
