@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.1.1](https://github.com/PeanutSplash/Surveygen/compare/v1.1.0...v1.1.1) (2026-03-04)
+
 # 1.1.0 (2026-03-04)
 
 
