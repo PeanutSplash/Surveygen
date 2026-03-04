@@ -41,8 +41,6 @@ jobs:
         run: pnpm run build
 
       - name: Upload asset to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/surveygen.user.js
+        run: gh release upload ${{ github.ref_name }} dist/surveygen.user.js --clobber
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
