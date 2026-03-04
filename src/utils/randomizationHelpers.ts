@@ -73,7 +73,7 @@ export const selectByProbability = <T extends { probability: number }>(options: 
  * @param options 选项数组，每个选项必须有probability属性
  * @returns 选中的选项数组
  */
-export const selectMultipleByProbability = <T extends { probability: number }>(options: T[]): T[] => {
+export const selectMultipleByProbability = <T extends { probability?: number }>(options: T[]): T[] => {
   if (!options || options.length === 0) {
     return []
   }
