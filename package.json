@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "release-it"
   },
   "dependencies": {
     "@heroicons/vue": "^2.1.5",
@@ -17,12 +18,14 @@
     "vue-draggable-resizable": "^3.0.0"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^10.0.5",
     "@types/node": "^22.7.2",
     "@vitejs/plugin-vue": "^5.0.4",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.6",
+    "release-it": "^19.2.4",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.4.5",
     "vite": "^5.2.12",

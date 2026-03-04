@@ -1,15 +1,13 @@
-name: Build and Release CI
+name: Build and Upload Release Asset
 
 on:
   push:
-    branches:
-      - 'main'
     tags:
       - 'v*'
 
 jobs:
-  build_and_release:
-    name: Build and Create Release
+  build_and_upload:
+    name: Build and Upload Asset
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -42,43 +40,9 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      - name: Determine Release Properties
-        id: release_properties
-        shell: bash
-        run: |
-          ARTIFACT_PATH="dist/surveygen.user.js"
-          echo "artifact_path=${ARTIFACT_PATH}" >> $GITHUB_OUTPUT
-
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            TAG_NAME="${{ github.ref_name }}"
-            RELEASE_NAME="${{ github.ref_name }}"
-            PRERELEASE="false"
-            echo "Release Type: Formal Release for tag ${TAG_NAME}"
-          else
-            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-            BRANCH_NAME_SLUG=$(echo "${{ github.ref_name }}" | sed 's|/|-|g')
-
-            TAG_NAME="beta-${BRANCH_NAME_SLUG}-${SHORT_SHA}"
-            RELEASE_NAME="Beta - ${BRANCH_NAME_SLUG} (${SHORT_SHA})"
-            PRERELEASE="true"
-            echo "Release Type: Beta Release for branch ${{ github.ref_name }} at commit ${SHORT_SHA}"
-          fi
-
-          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
-          echo "release_name=${RELEASE_NAME}" >> $GITHUB_OUTPUT
-          echo "prerelease=${PRERELEASE}" >> $GITHUB_OUTPUT
-
-          if [ ! -f "$ARTIFACT_PATH" ]; then
-            echo "Error: Build artifact $ARTIFACT_PATH not found!"
-            exit 1
-          fi
-
-      - name: Create GitHub Release
+      - name: Upload asset to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.release_properties.outputs.artifact_path }}
-          name: ${{ steps.release_properties.outputs.release_name }}
-          tag_name: ${{ steps.release_properties.outputs.tag_name }}
-          prerelease: ${{ steps.release_properties.outputs.prerelease }}
+          files: dist/surveygen.user.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
