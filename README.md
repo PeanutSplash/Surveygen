@@ -1,15 +1,13 @@
 # SurveyGen
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Vue-3.4.27-brightgreen" alt="Vue">
-  <img src="https://img.shields.io/badge/TypeScript-5.4.5-blue" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Vite-5.2.12-purple" alt="Vite">
-  <img src="https://img.shields.io/badge/TailwindCSS-3.4.11-38B2AC" alt="TailwindCSS">
-  <img src="https://img.shields.io/badge/Pinia-2.2.2-yellow" alt="Pinia">
+  <b>问卷星自动答题助手</b>
 </p>
 
 <p align="center">
-  <b>问卷星自动答题助手</b>
+  <a href="https://greasyfork.org/zh-CN/scripts/568432"><img src="https://img.shields.io/badge/Greasy%20Fork-安装脚本-red" alt="Greasy Fork"></a>
+  <a href="https://github.com/PeanutSplash/Surveygen/releases/latest"><img src="https://img.shields.io/github/v/release/PeanutSplash/Surveygen" alt="Release"></a>
+  <a href="https://github.com/PeanutSplash/Surveygen?tab=Apache-2.0-1-ov-file"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="License"></a>
 </p>
 
 <p align="center">
@@ -29,6 +27,13 @@
 - 文本题
 - 下拉选择题
 - 量表题
+
+## 📦 安装
+
+1. 安装浏览器扩展 [Tampermonkey](https://www.tampermonkey.net/)
+2. 前往 [Greasy Fork](https://greasyfork.org/zh-CN/scripts/568432) 点击「安装此脚本」
+
+或者从 [GitHub Releases](https://github.com/PeanutSplash/Surveygen/releases/latest) 下载最新版本手动安装。
 
 ## 📱 使用教程
 
