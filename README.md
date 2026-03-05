@@ -1,4 +1,4 @@
-# SurveyGen
+# 问卷星自动答题助手
 
 <p align="center">
   <b>问卷星自动答题助手</b>
@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://greasyfork.org/zh-CN/scripts/568432"><img src="https://img.shields.io/badge/Greasy%20Fork-安装脚本-red" alt="Greasy Fork"></a>
-  <a href="https://github.com/PeanutSplash/Surveygen/releases/latest"><img src="https://img.shields.io/github/v/release/PeanutSplash/Surveygen" alt="Release"></a>
+  <a href="https://github.com/PeanutSplash/Surveygen/releases/latest"><img src="https://img.shields.io/github/v/tag/PeanutSplash/Surveygen" alt="Release"></a>
   <a href="https://github.com/PeanutSplash/Surveygen?tab=Apache-2.0-1-ov-file"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="License"></a>
 </p>
 
