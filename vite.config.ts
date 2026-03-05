@@ -7,11 +7,19 @@ import svgLoader from 'vite-svg-loader'
 const { version } = require('./package.json')
 
 export default defineConfig({
+  build: {
+    minify: false,
+    cssMinify: false,
+  },
   plugins: [
     vue(),
     monkey({
       entry: 'src/main.ts',
       userscript: {
+        name: '问卷星自动答题助手',
+        description: '问卷星(wjx.cn)自动答题工具，支持单选、多选、填空、矩阵、量表等题型，支持概率设置和高级模式',
+        author: 'PeanutSplash',
+        license: 'Apache-2.0',
         icon: 'https://vitejs.dev/logo.svg',
         namespace: 'npm/vite-plugin-monkey',
         match: [
