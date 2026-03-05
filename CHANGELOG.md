@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.2.0](https://github.com/PeanutSplash/Surveygen/compare/v1.1.1...v1.2.0) (2026-03-05)
+
+
+### Features
+
+* **vite:** add build and userscript metadata ([a469543](https://github.com/PeanutSplash/Surveygen/commit/a4695431a8d1ad7050f3ffc81e1a9cd37169737d))
+
 ## [1.1.1](https://github.com/PeanutSplash/Surveygen/compare/v1.1.0...v1.1.1) (2026-03-04)
 
 # 1.1.0 (2026-03-04)
