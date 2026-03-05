@@ -16,7 +16,7 @@ export default defineConfig({
     monkey({
       entry: 'src/main.ts',
       userscript: {
-        name: '问卷星自动答题｜批量刷问卷｜自定义概率比例',
+        name: '🔥问卷星自动答题｜批量刷问卷｜自定义概率比例🔥',
         description: '问卷星(wjx.cn)自动答题脚本，支持单选/多选/填空/矩阵/量表/下拉框，可自定义每个选项概率比例，批量循环提交刷问卷，模拟真人操作，自动处理验证，持续更新中',
         author: 'PeanutSplash',
         license: 'Apache-2.0',

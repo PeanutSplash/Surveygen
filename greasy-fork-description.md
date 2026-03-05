@@ -2,6 +2,8 @@
 
 一款功能强大的问卷星（wjx.cn）自动答题工具，支持**自定义概率比例**、**批量循环提交**，无需改代码，可视化操作界面，安装即用。
 
+![脚本截图](https://raw.githubusercontent.com/PeanutSplash/Surveygen/main/src/assets/image/screenshot.png)
+
 ## 支持题型
 
 - 单选题 / 多选题
