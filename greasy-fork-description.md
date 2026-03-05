@@ -2,6 +2,8 @@
 
 一款功能强大的问卷星（wjx.cn）自动答题工具，支持**自定义概率比例**、**批量循环提交**，无需改代码，可视化操作界面，安装即用。
 
+GitHub：https://github.com/PeanutSplash/Surveygen
+
 ![脚本截图](https://raw.githubusercontent.com/PeanutSplash/Surveygen/main/src/assets/image/screenshot.png)
 
 ## 支持题型
@@ -56,4 +58,3 @@
 - vm 链接自动跳转到 vj 版本
 - 答案和概率设置按问卷保存，下次打开自动恢复
 - 开源免费，Apache-2.0 许可证
-- GitHub 项目地址：https://github.com/PeanutSplash/Surveygen
